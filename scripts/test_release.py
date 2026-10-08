@@ -38,7 +38,7 @@ class ReleaseTests(unittest.TestCase):
             self.assertEqual((extracted / "문서/PaperStager").read_text(), "synthetic")
 
     def test_partial_smoke_evidence_cannot_pass(self):
-        marker = {"success": True, "sourcePreserved": True, "importedPages": 4,
+        marker = {"success": True, "sourcePreserved": True, "nativeWindow": True, "importedPages": 4,
                   "exportedDocuments": 2, "thumbnailsRendered": 4}
         release.validate_marker(marker)
         for field in marker:
@@ -46,6 +46,26 @@ class ReleaseTests(unittest.TestCase):
             incomplete.pop(field)
             with self.assertRaises(ValueError):
                 release.validate_marker(incomplete)
+
+    def test_manifest_cannot_omit_payload_or_change_content(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            metadata = {"executable": "PaperStager", "notices": "NOTICES.md"}
+            for name in ("PaperStager", "package-info.json", "README.md", "LICENSE", "NOTICES.md"):
+                (root / name).write_text("synthetic", encoding="utf-8")
+            manifest = {path.name: release.sha256(path) for path in root.iterdir()}
+            release.write_json(root / "file-checksums.json", {})
+            with self.assertRaises(ValueError):
+                release.validate_payload(root, metadata)
+            release.write_json(root / "file-checksums.json", manifest)
+            release.validate_payload(root, metadata)
+            (root / "unlisted.dll").write_text("extra", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                release.validate_payload(root, metadata)
+            (root / "unlisted.dll").unlink()
+            (root / "PaperStager").write_text("tampered", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                release.validate_payload(root, metadata)
 
     def test_scan_detects_credentials_without_including_values(self):
         synthetic = ("ghp_" + "A" * 36).encode()

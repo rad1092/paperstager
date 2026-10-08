@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 from pathlib import Path, PurePosixPath
+import platform
 import plistlib
 import re
 import shutil
@@ -51,6 +52,16 @@ def package(args: argparse.Namespace) -> None:
     runtime = json.loads((publish_dir / "PaperStager.runtimeconfig.json").read_text(encoding="utf-8"))
     if "includedFrameworks" not in runtime.get("runtimeOptions", {}):
         raise ValueError("Release must be self-contained; the .NET runtime must be included.")
+    frameworks = runtime["runtimeOptions"]["includedFrameworks"]
+    runtime_version = next((item.get("version") for item in frameworks if item.get("name") == "Microsoft.NETCore.App"), None)
+    if not runtime_version or not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", runtime_version):
+        raise ValueError("Could not identify the self-contained .NET runtime version.")
+    package_id = f"microsoft.netcore.app.runtime.{args.rid}"
+    nuget_packages = Path(os.environ.get("NUGET_PACKAGES", Path.home() / ".nuget" / "packages"))
+    runtime_package = args.runtime_package_dir or nuget_packages / package_id / runtime_version
+    for name in ("LICENSE.TXT", "THIRD-PARTY-NOTICES.TXT"):
+        if not (runtime_package / name).is_file():
+            raise ValueError(f"Actual .NET runtime license is missing: {runtime_package / name}")
     required_docs = [ROOT / "README.md", ROOT / "LICENSE", ROOT / args.notices]
     for document in required_docs:
         if not document.is_file():
@@ -93,13 +104,25 @@ def package(args: argparse.Namespace) -> None:
                 shutil.copy2(document, destination / document.name)
             shutil.copytree(ROOT / "docs", destination / "docs")
             shutil.copytree(ROOT / "third_party", destination / "third_party")
+            runtime_notices = destination / "third_party" / f"dotnet-runtime-{runtime_version}"
+            runtime_notices.mkdir(parents=True, exist_ok=True)
+            for name in ("LICENSE.TXT", "THIRD-PARTY-NOTICES.TXT"):
+                shutil.copy2(runtime_package / name, runtime_notices / name)
+            write_json(runtime_notices / f"package-{args.rid}.json", {
+                "package": package_id, "version": runtime_version,
+                "source": f"https://www.nuget.org/packages/{package_id}/{runtime_version}",
+                "licenseSha256": sha256(runtime_package / "LICENSE.TXT"),
+                "noticesSha256": sha256(runtime_package / "THIRD-PARTY-NOTICES.TXT"),
+            })
         if not args.rid.startswith("win-"):
             (payload / executable_name).chmod(0o755)
         executable = (payload / executable_name).relative_to(stage).as_posix()
         metadata = {
             "name": "PaperStager", "version": version, "runtimeIdentifier": args.rid,
             "sourceCommit": revision, "executable": executable,
-            "selfContained": True, "developerIdSigned": False, "notarized": False,
+            "notices": Path(args.notices).name,
+            "selfContained": True, "developerIdSigned": False,
+            "runtimeVersion": runtime_version, "authenticodeSigned": False, "notarized": False,
         }
         write_json(stage / "package-info.json", metadata)
         if resources != stage:
@@ -159,11 +182,27 @@ def extract_checked(archive: Path, destination: Path) -> Path:
 
 
 def validate_marker(marker: dict) -> None:
-    if marker.get("success") is not True or marker.get("sourcePreserved") is not True:
-        raise ValueError("Native smoke did not confirm success and source preservation.")
+    if any(marker.get(field) is not True for field in ("success", "sourcePreserved", "nativeWindow")):
+        raise ValueError("Native smoke did not confirm a visible window, success, and source preservation.")
     for field, minimum in (("importedPages", 4), ("exportedDocuments", 2), ("thumbnailsRendered", 4)):
         if type(marker.get(field)) is not int or marker[field] < minimum:
             raise ValueError(f"Native smoke marker is missing its required {field} evidence.")
+
+
+def validate_payload(stage: Path, metadata: dict) -> None:
+    manifest = json.loads((stage / "file-checksums.json").read_text(encoding="utf-8"))
+    files = {path.relative_to(stage).as_posix() for path in stage.rglob("*") if path.is_file()}
+    expected = files - {"file-checksums.json"}
+    if not isinstance(manifest, dict) or not expected or set(manifest) != expected:
+        raise ValueError("Package manifest must cover every payload file exactly once.")
+    required = {"package-info.json", "README.md", "LICENSE", metadata.get("notices"), metadata.get("executable")}
+    if not required.issubset(expected):
+        raise ValueError("Package manifest is missing an executable, metadata, or required notices.")
+    for name, digest in manifest.items():
+        candidate = stage / name
+        if (not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest)
+                or not candidate.resolve().is_relative_to(stage.resolve()) or sha256(candidate) != digest):
+            raise ValueError("Extracted package file hash does not match its manifest.")
 
 
 def run_app(command: list[str], cwd: Path, log_base: Path, timeout: int) -> int:
@@ -193,11 +232,14 @@ def smoke(args: argparse.Namespace) -> None:
         metadata = json.loads((stage / "package-info.json").read_text(encoding="utf-8"))
         if metadata.get("sourceCommit") != args.sha:
             raise ValueError("Package source SHA differs from the commit being verified.")
-        manifest = json.loads((stage / "file-checksums.json").read_text(encoding="utf-8"))
-        for name, digest in manifest.items():
-            candidate = stage / name
-            if not candidate.resolve().is_relative_to(stage.resolve()) or sha256(candidate) != digest:
-                raise ValueError("Extracted package file hash does not match its manifest.")
+        host_arch = platform.machine().lower()
+        expected_rid = {("darwin", "arm64"): "osx-arm64", ("win32", "amd64"): "win-x64",
+                        ("linux", "x86_64"): "linux-x64"}.get((sys.platform, host_arch))
+        if metadata.get("runtimeIdentifier") != expected_rid:
+            raise ValueError("Package runtime must match this host's native architecture.")
+        if stage.name != f"PaperStager-{metadata.get('version')}-{expected_rid}" or archive.stem != stage.name:
+            raise ValueError("Package directory and archive names must match its version and runtime.")
+        validate_payload(stage, metadata)
         executable = (stage / metadata["executable"]).resolve(strict=True)
         if not executable.is_relative_to(stage.resolve()):
             raise ValueError("Package executable points outside its package.")
@@ -205,6 +247,11 @@ def smoke(args: argparse.Namespace) -> None:
             work = base / f"synthetic-run-{launch}"
             work.mkdir()
             command = [str(executable), "--smoke", str(work)]
+            launch_mode = "native-executable"
+            if sys.platform == "darwin" and launch == 2:
+                # The second launch also checks Finder/LaunchServices and Info.plist.
+                command = ["open", "-W", "-n", str(stage / "PaperStager.app"), "--args", "--smoke", str(work)]
+                launch_mode = "macos-app-bundle"
             if sys.platform.startswith("linux"):
                 if not shutil.which("xvfb-run"):
                     raise ValueError("Linux native smoke requires xvfb-run.")
@@ -218,7 +265,7 @@ def smoke(args: argparse.Namespace) -> None:
             if status != 0:
                 raise ValueError(f"Native launch {launch} failed with exit status {status}.")
             validate_marker(marker)
-            results.append({"launch": launch, "exitCode": status, "marker": marker})
+            results.append({"launch": launch, "mode": launch_mode, "exitCode": status, "marker": marker})
     write_json(args.output / "package-smoke.json", {
         "success": True, "archive": archive.name, "sha256": expected_digest,
         "sourceCommit": args.sha, "launches": results,
@@ -260,6 +307,7 @@ def main() -> int:
     pack.add_argument("--version")
     pack.add_argument("--sha")
     pack.add_argument("--notices", default="THIRD-PARTY-NOTICES.md")
+    pack.add_argument("--runtime-package-dir", type=Path, help="Override the resolved runtime NuGet package directory.")
     pack.set_defaults(handler=package)
     launch = commands.add_parser("smoke")
     launch.add_argument("--archive", required=True, type=Path)

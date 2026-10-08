@@ -166,5 +166,17 @@ jobs:
               'Check downloads against `SHA256SUMS` before running them.\n', encoding='utf-8')
           PY
           gh release create "$RELEASE_TAG" --verify-tag --target "$RELEASE_SHA" \
-            --title "PaperStager $RELEASE_TAG" --notes-file artifacts/release/release-notes.md \
-            artifacts/release/*.zip artifacts/release/SHA256SUMS
+            --title "PaperStager $RELEASE_TAG" --prerelease --notes-file artifacts/release/release-notes.md \
+            artifacts/release/*.zip artifacts/release/*.zip.sha256 artifacts/release/SHA256SUMS
+
+      - name: Download public release assets and verify checksums again
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          gh release download "$RELEASE_TAG" --dir artifacts/downloaded --pattern '*.zip' --pattern '*.zip.sha256' --pattern 'SHA256SUMS'
+          cd artifacts/downloaded && sha256sum --check SHA256SUMS
+          cd ../..
+          python3 scripts/release.py checksums --directory artifacts/downloaded --sha "$RELEASE_SHA" --tag "$RELEASE_TAG"

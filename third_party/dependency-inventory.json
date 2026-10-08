@@ -11,7 +11,16 @@
       "branch": "refs/heads/release/12.1.3",
       "commit": "8eeda4f6f546165b3f72e63c9f42247abb306905"
     },
-    "retained_notices": []
+    "retained_notices": [
+      {
+        "file": "packages/Avalonia-12.1.3/LICENSE.txt",
+        "sha256": "213814d306090074d234d760239ff0f67eb9b8d20eefb4d5631bb39dbe0b769b"
+      },
+      {
+        "file": "packages/Avalonia-12.1.3/NOTICE.md",
+        "sha256": "dd6f80852d16320c865a2e403ffd1a8b07a0e34c5b37122c0bc2343639ff68e6"
+      }
+    ]
   },
   {
     "package": "Avalonia.Desktop",
@@ -40,7 +49,12 @@
       "branch": "refs/heads/release/12.1.3",
       "commit": "8eeda4f6f546165b3f72e63c9f42247abb306905"
     },
-    "retained_notices": [],
+    "retained_notices": [
+      {
+        "file": "packages/Avalonia.Fonts.Inter-12.1.3/Inter-LICENSE.txt",
+        "sha256": "4d7d9c95e7d7f2f0ebf76d5e0b344826b74e903a34028ee18ab54bb639e45906"
+      }
+    ],
     "shared_notices": "packages/Avalonia-12.1.3"
   },
   {
@@ -71,8 +85,44 @@
     },
     "retained_notices": [
       {
+        "file": "packages/Avalonia.Angle.Windows.Natives-2.1.27548.20260419/Abseil-LICENSE.txt",
+        "sha256": "c79a7fea0e3cac04cd43f20e7b648e5a0ff8fa5344e644b0ee09ca1162b62747"
+      },
+      {
+        "file": "packages/Avalonia.Angle.Windows.Natives-2.1.27548.20260419/Chromium-LICENSE.txt",
+        "sha256": "368cca1106be99d39ecd32a38d8305585d802a475effb66380b91ffc9bcf709b"
+      },
+      {
         "file": "packages/Avalonia.Angle.Windows.Natives-2.1.27548.20260419/LICENSE",
         "sha256": "54aff7276217df9f6b5181613999d208c9e40d2b1d51bf55217837e6871a4a63"
+      },
+      {
+        "file": "packages/Avalonia.Angle.Windows.Natives-2.1.27548.20260419/astc-encoder-LICENSE.txt",
+        "sha256": "494accc32e50eb523a0e384d0ae6d4b702db867a89d6971216760e92b240ee12"
+      },
+      {
+        "file": "packages/Avalonia.Angle.Windows.Natives-2.1.27548.20260419/rapidjson-license.txt",
+        "sha256": "a140e5d46fe734a1c78f1a3c3ef207871dd75648be71fdda8e309b23ab8b1f32"
+      },
+      {
+        "file": "packages/Avalonia.Angle.Windows.Natives-2.1.27548.20260419/spirv-headers-LICENSE.txt",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+      },
+      {
+        "file": "packages/Avalonia.Angle.Windows.Natives-2.1.27548.20260419/vulkan-headers-LICENSE.txt",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+      },
+      {
+        "file": "packages/Avalonia.Angle.Windows.Natives-2.1.27548.20260419/xxHash-LICENSE.txt",
+        "sha256": "6ffedbc0f7878612d2b23589f1ff2ab15633e1df7963a5d9fc750ec5500c7e7a"
+      },
+      {
+        "file": "packages/Avalonia.Angle.Windows.Natives-2.1.27548.20260419/zlib-LICENSE.txt",
+        "sha256": "e32ff4e00d9d94930537635291da39e7e612703334bf6fde8c7f1686fe8a45a2"
+      },
+      {
+        "file": "packages/Avalonia.Angle.Windows.Natives-2.1.27548.20260419/zlib-google-LICENSE.txt",
+        "sha256": "4c3117587e3ca0fd9ed20e33c26da0be4135eba8aa7e4d06b28c21e999cd5cb1"
       }
     ]
   },
@@ -87,7 +137,12 @@
       "url": "https://github.com/AvaloniaUI/Avalonia.BuildServices",
       "commit": "777f975b0a0cecf0311273711d56697212c558c0"
     },
-    "retained_notices": []
+    "retained_notices": [
+      {
+        "file": "packages/Avalonia.BuildServices-11.3.2/LICENSE",
+        "sha256": "94162c40c663bd96ec1b870e6aba6ef0a43f44c9eb500807e7965e7078f6dc47"
+      }
+    ]
   },
   {
     "package": "Avalonia.FreeDesktop",
@@ -242,12 +297,12 @@
     },
     "retained_notices": [
       {
-        "file": "packages/HarfBuzzSharp.NativeAssets.Linux-8.3.1.3/THIRD-PARTY-NOTICES.txt",
-        "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
-      },
-      {
         "file": "packages/HarfBuzzSharp.NativeAssets.Linux-8.3.1.3/LICENSE.txt",
         "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+      },
+      {
+        "file": "packages/HarfBuzzSharp.NativeAssets.Linux-8.3.1.3/THIRD-PARTY-NOTICES.txt",
+        "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
       }
     ]
   },
@@ -265,12 +320,12 @@
     },
     "retained_notices": [
       {
-        "file": "packages/HarfBuzzSharp.NativeAssets.macOS-8.3.1.3/THIRD-PARTY-NOTICES.txt",
-        "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
-      },
-      {
         "file": "packages/HarfBuzzSharp.NativeAssets.macOS-8.3.1.3/LICENSE.txt",
         "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+      },
+      {
+        "file": "packages/HarfBuzzSharp.NativeAssets.macOS-8.3.1.3/THIRD-PARTY-NOTICES.txt",
+        "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
       }
     ]
   },
@@ -288,12 +343,12 @@
     },
     "retained_notices": [
       {
-        "file": "packages/HarfBuzzSharp.NativeAssets.WebAssembly-8.3.1.3/THIRD-PARTY-NOTICES.txt",
-        "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
-      },
-      {
         "file": "packages/HarfBuzzSharp.NativeAssets.WebAssembly-8.3.1.3/LICENSE.txt",
         "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+      },
+      {
+        "file": "packages/HarfBuzzSharp.NativeAssets.WebAssembly-8.3.1.3/THIRD-PARTY-NOTICES.txt",
+        "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
       }
     ]
   },
@@ -311,12 +366,12 @@
     },
     "retained_notices": [
       {
-        "file": "packages/HarfBuzzSharp.NativeAssets.Win32-8.3.1.3/THIRD-PARTY-NOTICES.txt",
-        "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
-      },
-      {
         "file": "packages/HarfBuzzSharp.NativeAssets.Win32-8.3.1.3/LICENSE.txt",
         "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+      },
+      {
+        "file": "packages/HarfBuzzSharp.NativeAssets.Win32-8.3.1.3/THIRD-PARTY-NOTICES.txt",
+        "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
       }
     ]
   },
@@ -331,7 +386,12 @@
       "url": "https://github.com/kekekeks/MicroCom",
       "commit": "76785efcafd91b5902fd19dd11145f6dd655b7b4"
     },
-    "retained_notices": []
+    "retained_notices": [
+      {
+        "file": "packages/MicroCom.Runtime-0.11.6/LICENSE",
+        "sha256": "6ee769c9ac4dac9abb16b98b1341e9528ff9f4ab685481410d3376d14148f3a9"
+      }
+    ]
   },
   {
     "package": "Microsoft.Extensions.DependencyInjection.Abstractions",
@@ -346,12 +406,12 @@
     },
     "retained_notices": [
       {
-        "file": "packages/Microsoft.Extensions.DependencyInjection.Abstractions-8.0.2/THIRD-PARTY-NOTICES.TXT",
-        "sha256": "b60b2912da28eaa6518593c9e2efb5334ee062d3c42e80d8fdfa806b3dc52977"
-      },
-      {
         "file": "packages/Microsoft.Extensions.DependencyInjection.Abstractions-8.0.2/LICENSE.TXT",
         "sha256": "d7a68596ab69b06f51ca278a6545148e4269a9381c26d597c13df5d88e08cf5b"
+      },
+      {
+        "file": "packages/Microsoft.Extensions.DependencyInjection.Abstractions-8.0.2/THIRD-PARTY-NOTICES.TXT",
+        "sha256": "b60b2912da28eaa6518593c9e2efb5334ee062d3c42e80d8fdfa806b3dc52977"
       }
     ]
   },
@@ -368,12 +428,12 @@
     },
     "retained_notices": [
       {
-        "file": "packages/Microsoft.Extensions.Logging.Abstractions-8.0.3/THIRD-PARTY-NOTICES.TXT",
-        "sha256": "b60b2912da28eaa6518593c9e2efb5334ee062d3c42e80d8fdfa806b3dc52977"
-      },
-      {
         "file": "packages/Microsoft.Extensions.Logging.Abstractions-8.0.3/LICENSE.TXT",
         "sha256": "d7a68596ab69b06f51ca278a6545148e4269a9381c26d597c13df5d88e08cf5b"
+      },
+      {
+        "file": "packages/Microsoft.Extensions.Logging.Abstractions-8.0.3/THIRD-PARTY-NOTICES.TXT",
+        "sha256": "b60b2912da28eaa6518593c9e2efb5334ee062d3c42e80d8fdfa806b3dc52977"
       }
     ]
   },
@@ -406,7 +466,16 @@
       "url": "https://github.com/UglyToad/PdfPig",
       "commit": "a7bb35662bbbf405efddad50aedc9bcdcf515afc"
     },
-    "retained_notices": []
+    "retained_notices": [
+      {
+        "file": "packages/PdfPig-0.1.16/LICENSE.txt",
+        "sha256": "4c510e162f896ea43b4b1cf1b743641d7c756f1004d0e5eaf0615b28b7ded409"
+      },
+      {
+        "file": "packages/PdfPig-0.1.16/NOTICES.txt",
+        "sha256": "d7a07a105f64d9240ed40a8ebe0c45658616c1660bf9fd8a36e2dbf3165f6e92"
+      }
+    ]
   },
   {
     "package": "PDFsharp",
@@ -419,7 +488,16 @@
       "url": "https://github.com/empira/PDFsharp",
       "branch": "master"
     },
-    "retained_notices": []
+    "retained_notices": [
+      {
+        "file": "packages/PDFsharp-6.2.4/BigGustave-LICENSE.txt",
+        "sha256": "79d0fc44716007dddc375601bca8879ad45bc1165bf9342b7a16572b4f41abe8"
+      },
+      {
+        "file": "packages/PDFsharp-6.2.4/LICENSE.txt",
+        "sha256": "3c648a5072bd7f7386ca28687780489a708a57ed75f13927bc16dd3e34af3bf7"
+      }
+    ]
   },
   {
     "package": "SkiaSharp",
@@ -454,12 +532,12 @@
     },
     "retained_notices": [
       {
-        "file": "packages/SkiaSharp.NativeAssets.Linux-3.119.4/THIRD-PARTY-NOTICES.txt",
-        "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
-      },
-      {
         "file": "packages/SkiaSharp.NativeAssets.Linux-3.119.4/LICENSE.txt",
         "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+      },
+      {
+        "file": "packages/SkiaSharp.NativeAssets.Linux-3.119.4/THIRD-PARTY-NOTICES.txt",
+        "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
       }
     ]
   },
@@ -477,12 +555,12 @@
     },
     "retained_notices": [
       {
-        "file": "packages/SkiaSharp.NativeAssets.macOS-3.119.4/THIRD-PARTY-NOTICES.txt",
-        "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
-      },
-      {
         "file": "packages/SkiaSharp.NativeAssets.macOS-3.119.4/LICENSE.txt",
         "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+      },
+      {
+        "file": "packages/SkiaSharp.NativeAssets.macOS-3.119.4/THIRD-PARTY-NOTICES.txt",
+        "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
       }
     ]
   },
@@ -500,12 +578,12 @@
     },
     "retained_notices": [
       {
-        "file": "packages/SkiaSharp.NativeAssets.WebAssembly-3.119.4/THIRD-PARTY-NOTICES.txt",
-        "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
-      },
-      {
         "file": "packages/SkiaSharp.NativeAssets.WebAssembly-3.119.4/LICENSE.txt",
         "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+      },
+      {
+        "file": "packages/SkiaSharp.NativeAssets.WebAssembly-3.119.4/THIRD-PARTY-NOTICES.txt",
+        "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
       }
     ]
   },
@@ -523,12 +601,12 @@
     },
     "retained_notices": [
       {
-        "file": "packages/SkiaSharp.NativeAssets.Win32-3.119.4/THIRD-PARTY-NOTICES.txt",
-        "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
-      },
-      {
         "file": "packages/SkiaSharp.NativeAssets.Win32-3.119.4/LICENSE.txt",
         "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+      },
+      {
+        "file": "packages/SkiaSharp.NativeAssets.Win32-3.119.4/THIRD-PARTY-NOTICES.txt",
+        "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
       }
     ]
   },
@@ -545,12 +623,12 @@
     },
     "retained_notices": [
       {
-        "file": "packages/System.Security.Cryptography.Pkcs-8.0.1/THIRD-PARTY-NOTICES.TXT",
-        "sha256": "b60b2912da28eaa6518593c9e2efb5334ee062d3c42e80d8fdfa806b3dc52977"
-      },
-      {
         "file": "packages/System.Security.Cryptography.Pkcs-8.0.1/LICENSE.TXT",
         "sha256": "d7a68596ab69b06f51ca278a6545148e4269a9381c26d597c13df5d88e08cf5b"
+      },
+      {
+        "file": "packages/System.Security.Cryptography.Pkcs-8.0.1/THIRD-PARTY-NOTICES.TXT",
+        "sha256": "b60b2912da28eaa6518593c9e2efb5334ee062d3c42e80d8fdfa806b3dc52977"
       }
     ]
   },
@@ -566,6 +644,11 @@
       "branch": "refs/heads/main",
       "commit": "b4a7fed0b878f74cb54f7cca84d2889af4e596ba"
     },
-    "retained_notices": []
+    "retained_notices": [
+      {
+        "file": "packages/Tmds.DBus.Protocol-0.94.1/COPYING",
+        "sha256": "aca3b49277abcc7886ccb2f115603a9f5b15fc3f96019a10c00f2974098b210c"
+      }
+    ]
   }
 ]

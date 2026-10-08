@@ -9,6 +9,8 @@
         "contentHash": "YoucjhTDLzcVNTIe2kM0wwIK77Mq8b51iHjCblfiaiAr7XMydZ4da7LZLt7jjPjKJtXa5p6mL+J08fP8AASXhw=="
       }
     },
-    "net10.0/osx-arm64": {}
+    "net10.0/linux-x64": {},
+    "net10.0/osx-arm64": {},
+    "net10.0/win-x64": {}
   }
 }

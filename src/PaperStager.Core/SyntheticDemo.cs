@@ -28,6 +28,16 @@ public static class SyntheticDemo
         }
         using var input = new MemoryStream(builder.Build(), writable: false);
         using var pdf = PdfReader.Open(input, PdfDocumentOpenMode.Modify);
+        // PdfPig's demo writer puts this obsolete resource entry on the page.
+        // Normalize only our in-memory synthetic fixture, never an imported user PDF.
+        foreach (var page in pdf.Pages)
+        {
+            if (page.Elements["/ProcSet"] is { } procSet)
+            {
+                page.Resources.Elements["/ProcSet"] = procSet;
+                page.Elements.Remove("/ProcSet");
+            }
+        }
         pdf.Pages[3].Rotate = 90;
         pdf.Info.Title = "PaperStager synthetic intake example";
         using var output = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);

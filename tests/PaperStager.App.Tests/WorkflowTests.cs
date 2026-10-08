@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text.Json;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
@@ -11,6 +12,106 @@ namespace PaperStager.App.Tests;
 
 public sealed class WorkflowTests
 {
+    [AvaloniaFact]
+    public async Task SavedProjectRuleEditsPromptBeforeOpenAndCancelPreservesEdits()
+    {
+        var window = new MainWindow();
+        var saved = Path.Combine(Path.GetTempPath(), "paperstager-open-test-" + Guid.NewGuid().ToString("N") + ".json");
+        window.Show();
+        try
+        {
+            await window.LoadDemoAsync();
+            Assert.True(window.Project.Sources.Count == 1, window.DiagnosticStatus);
+            await WaitForAsync(() => window.RenderedThumbnailCount >= 4);
+            await window.SaveProjectToPathAsync(saved);
+            await PumpAsync();
+            Assert.False(window.HasUnsavedChanges);
+            window.NavigateTo(0); window.NavigateTo(1);
+            await PumpAsync();
+            Assert.False(window.HasUnsavedChanges); // Creating editors must not look like an edit.
+
+            Action[] edits = [
+                () => Find<TextBox>(window, "TemplatePattern").Text = "edited_{client}_{reference}",
+                () => window.GetVisualDescendants().OfType<TextBox>().First(t => t.PlaceholderText == "Field name").Text = "edited_client",
+                () => window.GetVisualDescendants().OfType<TextBox>().First(t => t.PlaceholderText == "Label (Client:) or regular expression with capture group").Text = "Updated label:",
+                () => window.GetVisualDescendants().OfType<ComboBox>().First(c => c.Width == 120).SelectedIndex = 1,
+                () => window.GetVisualDescendants().OfType<CheckBox>().First(c => Equals(c.Content, "Required")).IsChecked = false
+            ];
+            foreach (var edit in edits)
+            {
+                edit(); await PumpAsync();
+                Assert.True(window.HasUnsavedChanges);
+                var opening = window.PrepareToOpenProjectAsync();
+                await PumpAsync();
+                var dialog = Assert.Single(window.OwnedWindows);
+                Assert.Equal("Open another project?", dialog.Title);
+                var editedTemplate = JsonSerializer.Serialize(window.Project.Template);
+                Click(dialog.GetVisualDescendants().OfType<Button>().Single(b => Equals(b.Content, "Cancel")));
+                Assert.False(await opening);
+                Assert.Equal(editedTemplate, JsonSerializer.Serialize(window.Project.Template));
+                Assert.Equal(1, window.CurrentStep);
+                await window.SaveProjectToPathAsync(saved);
+                Assert.False(window.HasUnsavedChanges);
+            }
+        }
+        finally { await CloseAndDeleteDemoAsync(window); File.Delete(saved); }
+    }
+
+    [AvaloniaFact]
+    public async Task CancelledDemoImportLeavesEmptyAndExistingProjectsUnchanged()
+    {
+        foreach (var existing in new[] { false, true })
+        {
+            var blockImport = false; var attempts = 0; string? cancelledPath = null;
+            var window = new MainWindow(async (path, token) => {
+                if (!blockImport) return await new PdfImportService().ImportAsync(path, token);
+                attempts++; cancelledPath = path;
+                await Task.Delay(Timeout.Infinite, token);
+                throw new InvalidOperationException("Cancelled import unexpectedly resumed.");
+            });
+            window.Show();
+            try
+            {
+                if (existing) { await window.LoadDemoAsync(); await WaitForAsync(() => window.RenderedThumbnailCount >= 4); }
+                var before = JsonSerializer.Serialize(window.Project);
+                blockImport = true;
+                var importing = window.LoadDemoAsync();
+                await WaitForAsync(() => cancelledPath != null);
+                await window.LoadDemoAsync(); // A second click cannot alter a running import.
+                Assert.Equal(1, attempts);
+                Click(Find<Button>(window, "CancelOperationButton"));
+                await importing;
+                Assert.Equal(before, JsonSerializer.Serialize(window.Project));
+                Assert.NotNull(cancelledPath);
+                Assert.False(Directory.Exists(Path.GetDirectoryName(cancelledPath)));
+            }
+            finally { await CloseAndDeleteDemoAsync(window); }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task FailedDemoImportDoesNotReplaceExistingTemplateOrBoundaries()
+    {
+        var failImport = false; string? failedPath = null;
+        var window = new MainWindow((path, token) => {
+            if (!failImport) return new PdfImportService().ImportAsync(path, token);
+            failedPath = path; throw new InvalidDataException("Synthetic import failure");
+        });
+        window.Show();
+        try
+        {
+            await window.LoadDemoAsync();
+            await WaitForAsync(() => window.RenderedThumbnailCount >= 4);
+            var before = JsonSerializer.Serialize(window.Project);
+            failImport = true;
+            await window.LoadDemoAsync();
+            Assert.Equal(before, JsonSerializer.Serialize(window.Project));
+            Assert.NotNull(failedPath);
+            Assert.False(Directory.Exists(Path.GetDirectoryName(failedPath)));
+        }
+        finally { await CloseAndDeleteDemoAsync(window); }
+    }
+
     [AvaloniaFact]
     public async Task EmptyProjectCannotSkipImportOrExport()
     {
@@ -80,7 +181,7 @@ public sealed class WorkflowTests
             await window.LoadDemoAsync();
             await WaitForAsync(() => window.RenderedThumbnailCount >= 4);
             var originalFields = window.Project.Template.Fields.Select(f => (f.Name, f.Kind, f.Expression)).ToArray();
-            Find<TextBox>(window, "TemplatePattern").Text = "reviewed/{client}_{reference}";
+            Find<TextBox>(window, "TemplatePattern").Text = "reviewed_{client}_{reference}";
             var source = Assert.Single(window.Project.Sources);
             var expectedThumbnails = 4;
             for (var attempt = 0; attempt < 3; attempt++)
@@ -89,7 +190,7 @@ public sealed class WorkflowTests
                 window.NavigateTo(1);
                 expectedThumbnails += 4;
                 await WaitForAsync(() => window.RenderedThumbnailCount >= expectedThumbnails);
-                Assert.Equal("reviewed/{client}_{reference}", Find<TextBox>(window, "TemplatePattern").Text);
+                Assert.Equal("reviewed_{client}_{reference}", Find<TextBox>(window, "TemplatePattern").Text);
                 Assert.Equal(originalFields, window.Project.Template.Fields.Select(f => (f.Name, f.Kind, f.Expression)).ToArray());
                 var boundaries = window.GetVisualDescendants().OfType<CheckBox>().Where(c => Equals(c.Content, "New document starts here")).ToArray();
                 Assert.Equal(4, boundaries.Length);
@@ -104,7 +205,7 @@ public sealed class WorkflowTests
             await PumpAsync();
             Assert.NotNull(window.ReviewPlan);
             Assert.False(window.ReviewPlan.HasErrors);
-            Assert.All(window.ReviewPlan.Documents, d => Assert.StartsWith("reviewed/", d.FileName));
+            Assert.All(window.ReviewPlan.Documents, d => Assert.StartsWith("reviewed_", d.FileName));
             Assert.All(window.Project.Documents, d => Assert.Equal(source.Id, d.SourceId));
         }
         finally { await CloseAndDeleteDemoAsync(window); }

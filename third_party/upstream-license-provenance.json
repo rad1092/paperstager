@@ -33,5 +33,66 @@
     "file": "packages/Avalonia.Fonts.Inter-12.1.3/Inter-LICENSE.txt",
     "url": "https://raw.githubusercontent.com/rsms/inter/0a5106e0b/LICENSE.txt",
     "sha256": "4d7d9c95e7d7f2f0ebf76d5e0b344826b74e903a34028ee18ab54bb639e45906"
+  },
+  {
+    "file": "packages/MicroCom.Runtime-0.11.6/LICENSE",
+    "url": "https://raw.githubusercontent.com/kekekeks/MicroCom/76785efcafd91b5902fd19dd11145f6dd655b7b4/LICENSE",
+    "sha256": "6ee769c9ac4dac9abb16b98b1341e9528ff9f4ab685481410d3376d14148f3a9"
+  },
+  {
+    "file": "packages/Avalonia.BuildServices-11.3.2/LICENSE",
+    "url": "https://raw.githubusercontent.com/AvaloniaUI/Avalonia.BuildServices/777f975b0a0cecf0311273711d56697212c558c0/LICENSE",
+    "sha256": "94162c40c663bd96ec1b870e6aba6ef0a43f44c9eb500807e7965e7078f6dc47"
+  },
+  {
+    "file": "packages/Tmds.DBus.Protocol-0.94.1/COPYING",
+    "url": "https://raw.githubusercontent.com/tmds/Tmds.DBus/b4a7fed0b878f74cb54f7cca84d2889af4e596ba/COPYING",
+    "sha256": "aca3b49277abcc7886ccb2f115603a9f5b15fc3f96019a10c00f2974098b210c"
+  },
+  {
+    "file": "packages/Avalonia.Angle.Windows.Natives-2.1.27548.20260419/xxHash-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/AvaloniaUI/angle/1c89805903c1482166356d3b950d474973180e61/src/common/third_party/xxhash/LICENSE",
+    "sha256": "6ffedbc0f7878612d2b23589f1ff2ab15633e1df7963a5d9fc750ec5500c7e7a"
+  },
+  {
+    "file": "packages/Avalonia.Angle.Windows.Natives-2.1.27548.20260419/Abseil-LICENSE.txt",
+    "url": "https://chromium.googlesource.com/chromium/src/third_party/abseil-cpp/+/677093525ed5a2f357482681a222274866088a2c/LICENSE?format=TEXT",
+    "sha256": "c79a7fea0e3cac04cd43f20e7b648e5a0ff8fa5344e644b0ee09ca1162b62747"
+  },
+  {
+    "file": "packages/Avalonia.Angle.Windows.Natives-2.1.27548.20260419/zlib-LICENSE.txt",
+    "url": "https://chromium.googlesource.com/chromium/src/third_party/zlib/+/b80f1d1e5256ac25f6aea3f31f13d458981cb1f9/LICENSE?format=TEXT",
+    "sha256": "e32ff4e00d9d94930537635291da39e7e612703334bf6fde8c7f1686fe8a45a2"
+  },
+  {
+    "file": "packages/Avalonia.Angle.Windows.Natives-2.1.27548.20260419/zlib-google-LICENSE.txt",
+    "url": "https://chromium.googlesource.com/chromium/src/third_party/zlib/+/b80f1d1e5256ac25f6aea3f31f13d458981cb1f9/google/compression_utils.h?format=TEXT",
+    "sha256": "4c3117587e3ca0fd9ed20e33c26da0be4135eba8aa7e4d06b28c21e999cd5cb1",
+    "extraction": "Copyright and license header before #ifndef; no executable code retained."
+  },
+  {
+    "file": "packages/Avalonia.Angle.Windows.Natives-2.1.27548.20260419/astc-encoder-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/ARM-software/astc-encoder/2319d9c4d4af53a7fc7c52985e264ce6e8a02a9b/LICENSE.txt",
+    "sha256": "494accc32e50eb523a0e384d0ae6d4b702db867a89d6971216760e92b240ee12"
+  },
+  {
+    "file": "packages/Avalonia.Angle.Windows.Natives-2.1.27548.20260419/rapidjson-license.txt",
+    "url": "https://raw.githubusercontent.com/Tencent/rapidjson/24b5e7a8b27f42fa16b96fc70aade9106cf7102f/license.txt",
+    "sha256": "a140e5d46fe734a1c78f1a3c3ef207871dd75648be71fdda8e309b23ab8b1f32"
+  },
+  {
+    "file": "packages/Avalonia.Angle.Windows.Natives-2.1.27548.20260419/spirv-headers-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/AvaloniaUI/angle/1c89805903c1482166356d3b950d474973180e61/third_party/spirv-headers/LICENSE",
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+  },
+  {
+    "file": "packages/Avalonia.Angle.Windows.Natives-2.1.27548.20260419/vulkan-headers-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/AvaloniaUI/angle/1c89805903c1482166356d3b950d474973180e61/third_party/vulkan-headers/LICENSE.txt",
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+  },
+  {
+    "file": "packages/Avalonia.Angle.Windows.Natives-2.1.27548.20260419/Chromium-LICENSE.txt",
+    "url": "https://chromium.googlesource.com/chromium/src/+/05dc1be2622dea01a692a4de937537ed1bbaf521/LICENSE?format=TEXT",
+    "sha256": "368cca1106be99d39ecd32a38d8305585d802a475effb66380b91ffc9bcf709b"
   }
 ]

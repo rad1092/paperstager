@@ -1,17 +1,23 @@
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using PaperStager.Core;
 using PaperStager.Rendering;
+
+[assembly: InternalsVisibleTo("PaperStager.App.Tests")]
 
 namespace PaperStager.App;
 
@@ -22,7 +28,8 @@ public sealed class MainWindow : Window
     private readonly StackPanel _navigation = new() { Spacing = 8 };
     private readonly List<Bitmap> _bitmaps = [];
     private readonly List<RuleEditor> _rules = [];
-    private readonly Button _cancel = new() { Content = "Cancel operation", IsVisible = false };
+    private readonly Button _cancel = new() { Content = "Cancel operation", IsVisible = false, Name = "CancelOperationButton" };
+    private readonly Func<string, CancellationToken, Task<SourcePdf>> _importPdf;
     private CancellationTokenSource? _operation;
     private TextBox? _pattern;
     private TextBox? _sourceText;
@@ -32,30 +39,39 @@ public sealed class MainWindow : Window
     private int _step, _previewGeneration, _pageOffset;
     private SourcePdf? _selectedSource;
     private string? _projectPath;
-    private string? _demoDirectory;
     private readonly List<string> _importIssues = [];
     public ReviewProject Project { get; private set; } = new();
     public ExportPlan? ReviewPlan { get; private set; }
     public int CurrentStep => _step;
     public bool IsApproved => _approval?.IsChecked == true;
     public int RenderedThumbnailCount { get; private set; }
+    internal bool HasUnsavedChanges => _dirty;
+    internal string DiagnosticStatus => _status.Text + " " + string.Join("; ", _importIssues);
 
-    public MainWindow()
+    public MainWindow() : this((path, token) => new PdfImportService().ImportAsync(path, token)) { }
+
+    internal MainWindow(Func<string, CancellationToken, Task<SourcePdf>> importPdf)
     {
+        _importPdf = importPdf;
         Title = "PaperStager — Review before filing"; Width = 1240; Height = 840; MinWidth = 1000; MinHeight = 700;
         Background = Brush("#F4F6FA");
         var shell = new Grid { ColumnDefinitions = new ColumnDefinitions("220,*"), RowDefinitions = new RowDefinitions("*,Auto") };
         var sidebar = new StackPanel { Spacing = 28, Margin = new Thickness(20, 30) };
         sidebar.Children.Add(new TextBlock { Text = "PaperStager", FontSize = 24, FontWeight = FontWeight.Bold, Foreground = Brushes.White });
         sidebar.Children.Add(new TextBlock { Text = "A review desk for\nyour PDF batches", Foreground = Brush("#B9C5DA"), FontSize = 14 });
-        string[] labels = ["1   Import PDFs", "2   Boundaries & names", "3   Review & export", "4   Results"];
-        for (var i = 0; i < labels.Length; i++) { var step = i; var button = ActionButton(labels[i], () => NavigateTo(step)); button.HorizontalAlignment = HorizontalAlignment.Stretch; _navigation.Children.Add(button); }
+        string[] labels = ["1  Import PDFs", "2  Boundaries & names", "3  Review & export", "4  Results"];
+        for (var i = 0; i < labels.Length; i++) { var step = i; var button = ActionButton(labels[i], () => NavigateTo(step), $"Step{i}Button"); button.HorizontalAlignment = HorizontalAlignment.Stretch; _navigation.Children.Add(button); }
         sidebar.Children.Add(_navigation);
-        sidebar.Children.Add(ActionButton("Open project…", () => _ = RunUiAsync(OpenProjectAsync)));
+        sidebar.Children.Add(ActionButton("Open project…", () => _ = RunUiAsync(OpenProjectAsync), "OpenProjectButton"));
         sidebar.Children.Add(ActionButton("Save project…", () => _ = RunUiAsync(SaveProjectAsync)));
         sidebar.Children.Add(new TextBlock { Text = "OFFLINE BY DESIGN\nNo account · No upload\nOriginals stay untouched", Foreground = Brush("#B9C5DA"), TextWrapping = TextWrapping.Wrap, LineHeight = 23, FontSize = 12 });
+        foreach (var button in sidebar.Children.OfType<Button>().Concat(_navigation.Children.OfType<Button>()))
+        {
+            button.Foreground = Brush("#F0F4FC"); button.Background = Brush("#2D4162");
+            button.Padding = new Thickness(9, 9); button.FontSize = 13;
+        }
         var side = new Border { Background = Brush("#192840"), Child = sidebar }; Grid.SetRowSpan(side, 2); shell.Children.Add(side);
-        var scroller = new ScrollViewer { Content = _body }; Grid.SetColumn(scroller, 1); shell.Children.Add(scroller);
+        var scroller = new ScrollViewer { Content = _body, Name = "WorkspaceScrollViewer" }; Grid.SetColumn(scroller, 1); shell.Children.Add(scroller);
         var footer = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(24, 12) };
         footer.Children.Add(_status); _cancel.Click += (_, _) => _operation?.Cancel(); Grid.SetColumn(_cancel, 1); footer.Children.Add(_cancel);
         Grid.SetColumn(footer, 1); Grid.SetRow(footer, 1); shell.Children.Add(footer); Content = shell;
@@ -117,7 +133,13 @@ public sealed class MainWindow : Window
 
     public async Task LoadPathsAsync(IEnumerable<string> paths)
     {
-        if (_operation != null) return;
+        await LoadPathsCoreAsync(paths);
+    }
+
+    private async Task<List<SourcePdf>> LoadPathsCoreAsync(IEnumerable<string> paths)
+    {
+        List<SourcePdf> imported = [];
+        if (_operation != null) return imported;
         await OperationAsync(async token => {
             foreach (var path in paths)
             {
@@ -125,23 +147,32 @@ public sealed class MainWindow : Window
                 if (Project.Sources.Any(s => Path.GetFullPath(s.Path) == Path.GetFullPath(path))) { SetStatus("That PDF is already in this project."); continue; }
                 try {
                     SetStatus($"Reading {Path.GetFileName(path)}…");
-                    var source = await new PdfImportService().ImportAsync(path, token);
-                    Project.Sources.Add(source); Project.Documents.AddRange(DocumentService.Split(source, [1])); Changed();
+                    var source = await _importPdf(path, token);
+                    token.ThrowIfCancellationRequested();
+                    Project.Sources.Add(source); Project.Documents.AddRange(DocumentService.Split(source, [1])); imported.Add(source); Changed();
                 } catch (OperationCanceledException) { throw; }
                 catch (Exception ex) { _importIssues.Add($"Could not import {Path.GetFileName(path)}: {ex.Message}"); }
             }
         });
         NavigateTo(0);
+        return imported;
     }
 
     public async Task LoadDemoAsync()
     {
-        _demoDirectory = Path.Combine(Path.GetTempPath(), "paperstager-demo-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(_demoDirectory);
-        var path = Path.Combine(_demoDirectory, "synthetic-batch.pdf"); SyntheticDemo.CreatePdf(path);
-        await LoadPathsAsync([path]);
-        Project.Template = SyntheticDemo.DemoTemplate();
-        var source = Project.Sources.Last(); Project.Documents.RemoveAll(d => d.SourceId == source.Id); Project.Documents.AddRange(DocumentService.Split(source, [1, 3]));
-        _selectedSource = source; Changed(); NavigateTo(1);
+        if (_operation != null) return;
+        var directory = Path.Combine(Path.GetTempPath(), "paperstager-demo-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
+        var path = Path.Combine(directory, "synthetic-batch.pdf");
+        try {
+            SyntheticDemo.CreatePdf(path);
+            var source = (await LoadPathsCoreAsync([path])).SingleOrDefault();
+            if (source == null) return;
+            Project.Template = SyntheticDemo.DemoTemplate();
+            Project.Documents.RemoveAll(d => d.SourceId == source.Id); Project.Documents.AddRange(DocumentService.Split(source, [1, 3]));
+            _selectedSource = source; Changed(); NavigateTo(1);
+        } finally {
+            if (!Project.Sources.Any(s => s.Path == path)) Directory.Delete(directory, recursive: true);
+        }
     }
 
     private void ShowBoundaries()
@@ -177,12 +208,14 @@ public sealed class MainWindow : Window
         _sourceText = new TextBox { Text = _selectedSource.Pages[0].Text, IsReadOnly = true, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, Height = 155, Name = "SourceText" }; right.Children.Add(_sourceText);
         right.Children.Add(Text("Naming fields", 18));
         _rules.Clear(); var ruleContainer = new StackPanel { Spacing = 8 };
-        void AddRule(FieldRule rule) { var row = new RuleEditor(rule); _rules.Add(row); ruleContainer.Children.Add(row.Panel); row.Remove.Click += (_, _) => { _rules.Remove(row); ruleContainer.Children.Remove(row.Panel); Changed(); }; }
+        void AddRule(FieldRule rule) { var row = new RuleEditor(rule, Changed); _rules.Add(row); ruleContainer.Children.Add(row.Panel); row.Remove.Click += (_, _) => { _rules.Remove(row); ruleContainer.Children.Remove(row.Panel); Changed(); }; }
         foreach (var rule in Project.Template.Fields) AddRule(rule);
         right.Children.Add(ruleContainer);
         right.Children.Add(ActionButton("+ Add field from selected text", () => { AddRule(new FieldRule { Name = "field" + (_rules.Count + 1), Kind = FieldRuleKind.AfterLabel, Expression = _sourceText.SelectedText ?? "" }); Changed(); }));
         right.Children.Add(Text("Template · use {field} tokens for the PDF file name.", 12));
         _pattern = new TextBox { Text = Project.Template.Pattern, PlaceholderText = "{date}_{client}_{reference}", Name = "TemplatePattern" }; right.Children.Add(_pattern);
+        var pattern = _pattern; var previousPattern = pattern.Text;
+        pattern.TextChanged += (_, _) => { if (pattern.Text == previousPattern) return; previousPattern = pattern.Text; Changed(); };
         var templateActions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         templateActions.Children.Add(ActionButton("Save template…", () => _ = RunUiAsync(SaveTemplateAsync)));
         templateActions.Children.Add(ActionButton("Load template…", () => _ = RunUiAsync(LoadTemplateAsync))); right.Children.Add(templateActions);
@@ -254,8 +287,12 @@ public sealed class MainWindow : Window
         _body.Children.Add(ActionButton("Refresh plan after edits", () => NavigateTo(2), "RefreshPlanButton"));
         _approval = new CheckBox { Content = "I checked the boundaries, field values and all proposed paths.", Name = "ApprovalCheckBox" };
         _export = ActionButton("Choose folder & export approved files…", () => _ = RunUiAsync(PickExportAsync), "ExportButton"); _export.IsEnabled = false;
-        _approval.IsCheckedChanged += (_, _) => _export.IsEnabled = _approval.IsChecked == true && ReviewPlan?.HasErrors == false;
+        _approval.IsCheckedChanged += (_, _) => {
+            _export.IsEnabled = _approval.IsChecked == true && ReviewPlan?.HasErrors == false;
+            if (_export.IsEnabled) SetStatus("Plan approved. Choose an output folder to export this reviewed batch.");
+        };
         _body.Children.Add(_approval); _body.Children.Add(_export);
+        SetStatus(ReviewPlan.HasErrors ? "Fix the review errors before approving export." : "Review the proposed names and approve when ready.");
         _body.Children.Add(Text("A new PaperStager batch folder will contain all PDFs and a mapping manifest. Existing files are never overwritten.", 12));
     }
     private void InvalidateApproval() { Changed(); if (_export != null) _export.IsEnabled = false; SetStatus("Plan changed. Refresh it and approve the updated paths."); }
@@ -293,13 +330,29 @@ public sealed class MainWindow : Window
     {
         if (_step == 1) ApplyRules();
         var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions { Title = "Save PaperStager project", SuggestedFileName = "intake.paperstager.json", DefaultExtension = "json", ShowOverwritePrompt = true });
-        if (file?.TryGetLocalPath() is { } path) { await new ProjectStore().SaveAsync(path, Project); _projectPath = path; _dirty = false; SetStatus($"Project saved: {Path.GetFileName(path)}"); }
+        if (file?.TryGetLocalPath() is { } path) await SaveProjectToPathAsync(path);
+    }
+    internal async Task SaveProjectToPathAsync(string path)
+    {
+        if (_step == 1) ApplyRules();
+        await new ProjectStore().SaveAsync(path, Project); _projectPath = path; _dirty = false; SetStatus($"Project saved: {Path.GetFileName(path)}");
+    }
+    internal async Task<bool> PrepareToOpenProjectAsync()
+    {
+        if (_step == 1) ApplyRules();
+        return !_dirty || await ConfirmAsync("Open another project?", "Unsaved edits will be lost. Save this project first if you need them.", "Discard edits & open");
     }
     private async Task OpenProjectAsync()
     {
-        if (_dirty && !await ConfirmAsync("Open another project?", "Unsaved edits will be lost. Save this project first if you need them.", "Discard edits & open")) return;
+        if (!await PrepareToOpenProjectAsync()) return;
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions { Title = "Open PaperStager project", FileTypeFilter = [new FilePickerFileType("JSON project") { Patterns = ["*.json"] }] });
-        if (files.FirstOrDefault()?.TryGetLocalPath() is { } path) { Project = await new ProjectStore().LoadAsync(path); _projectPath = path; _selectedSource = null; _dirty = false; _pattern = null; _result = null; NavigateTo(0); SetStatus("Project restored. Source hashes will be rechecked before export; review approval was cleared."); }
+        if (files.FirstOrDefault()?.TryGetLocalPath() is { } path) await RestoreProjectAsync(path);
+    }
+    internal async Task RestoreProjectAsync(string path)
+    {
+        var restored = await new ProjectStore().LoadAsync(path);
+        SetApproval(false); ReviewPlan = null; _approval = null; _export = null;
+        Project = restored; _projectPath = path; _selectedSource = null; _dirty = false; _pattern = null; _result = null; _pageOffset = 0; NavigateTo(0); SetStatus("Project restored. Source hashes will be rechecked before export; review approval was cleared.");
     }
     private async Task SaveTemplateAsync()
     {
@@ -350,6 +403,124 @@ public sealed class MainWindow : Window
         var panel = new StackPanel { Margin = new Thickness(24), Spacing = 18 }; panel.Children.Add(Text(message)); panel.Children.Add(ActionButton("Return to review", () => dialog.Close())); dialog.Content = panel; await dialog.ShowDialog(this);
     }
 
+    // Internal release QA: exercises the displayed controls, then renders their client area.
+    // It deliberately does not claim to exercise OS file pickers, desktop drag-and-drop,
+    // window decorations, accessibility permissions, or a screen capture API.
+    public async Task RunQaAsync(string? directory, IClassicDesktopStyleApplicationLifetime lifetime)
+    {
+        var root = directory ?? Path.Combine(Path.GetTempPath(), "paperstager-qa-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var captures = new List<string>();
+        var checks = new List<string>();
+        try {
+            if (!IsVisible) throw new InvalidOperationException("QA requires a displayed native window.");
+            await CaptureAsync("01-import.png");
+            ClickControl("DemoButton");
+            await WaitAsync(() => CurrentStep == 1 && _operation == null && RenderedThumbnailCount >= 4, "Demo import and native PDF thumbnails");
+            if (Project.Documents.Count != 2) throw new InvalidOperationException("Demo document boundaries are incorrect.");
+            checks.Add("Displayed demo button imported four pages; four PDF thumbnails rendered.");
+            await CaptureAsync("02-boundaries.png");
+            var boundaries = this.GetVisualDescendants().OfType<CheckBox>().Where(c => Equals(c.Content, "New document starts here")).ToArray();
+            boundaries[2].IsChecked = false;
+            if (Project.Documents.Count != 1 || Project.Documents[0].EndPage != 4) throw new InvalidOperationException("Boundary merge failed.");
+            boundaries[2].IsChecked = true;
+            if (Project.Documents.Count != 2) throw new InvalidOperationException("Boundary split failed.");
+            GetControl<TextBox>("TemplatePattern").Text = "reviewed_{client}_{reference}";
+            await NextFrameAsync();
+            for (var pass = 0; pass < 2; pass++) {
+                ClickControl("Step0Button"); ClickControl("ContinueButton");
+                if (GetControl<TextBox>("TemplatePattern").Text != "reviewed_{client}_{reference}") throw new InvalidOperationException("Back navigation lost naming edits.");
+            }
+            checks.Add("Boundary merge/split and repeated back navigation preserved edits.");
+            ScrollWorkspaceToEnd(); await CaptureAsync("03-naming-template.png");
+            var projectPath = Path.Combine(root, "project.json");
+            await SaveProjectToPathAsync(projectPath);
+            await NextFrameAsync();
+            if (_dirty) throw new InvalidOperationException("Saving a project left pending edits.");
+            GetControl<TextBox>("TemplatePattern").Text = "reviewed_{client}_{reference}_checked";
+            await NextFrameAsync();
+            if (!_dirty) throw new InvalidOperationException("Template input did not immediately mark unsaved edits.");
+            ClickControl("OpenProjectButton");
+            await WaitAsync(() => OwnedWindows.Any(w => w.Title == "Open another project?"), "Unsaved project confirmation");
+            var dialog = OwnedWindows.Single(w => w.Title == "Open another project?");
+            await CaptureWindowAsync(dialog, Path.Combine(root, "04-unsaved-open-confirmation.png")); captures.Add("04-unsaved-open-confirmation.png");
+            ClickDialog(dialog, "Cancel");
+            await WaitAsync(() => !OwnedWindows.Any(), "Cancelled project open");
+            if (Project.Template.Pattern != "reviewed_{client}_{reference}_checked") throw new InvalidOperationException("Cancelling open lost current naming edits.");
+            checks.Add("Editing a saved naming template prompted before Open; Cancel preserved edits.");
+            await SaveProjectToPathAsync(projectPath);
+            await new TemplateStore().SaveAsync(Path.Combine(root, "template.json"), Project.Template);
+            await RestoreProjectAsync(projectPath);
+            Project.Template = await new TemplateStore().LoadAsync(Path.Combine(root, "template.json"));
+            ClickControl("Step2Button"); await NextFrameAsync();
+            if (ReviewPlan?.HasErrors != false || IsApproved) throw new InvalidOperationException("Restored project did not require a fresh valid review.");
+            await CaptureAsync("05-review.png");
+            var approval = GetControl<CheckBox>("ApprovalCheckBox"); approval.IsChecked = true;
+            var field = this.GetVisualDescendants().OfType<TextBox>().First(t => t.PlaceholderText == "Enter verified value");
+            field.Text = "검토완료";
+            await NextFrameAsync();
+            if (IsApproved || ReviewPlan != null || GetControl<Button>("ExportButton").IsEnabled) throw new InvalidOperationException("Review edit did not invalidate approval.");
+            ClickControl("RefreshPlanButton"); await NextFrameAsync();
+            if (ReviewPlan?.HasErrors != false || !ReviewPlan.Documents[0].FileName.Contains("검토완료", StringComparison.Ordinal)) throw new InvalidOperationException("Unicode field was not retained in the reviewed name.");
+            GetControl<CheckBox>("ApprovalCheckBox").IsChecked = true;
+            ScrollWorkspaceToEnd(); await CaptureAsync("06-approved-review.png");
+            var first = await ExportToAsync(root) ?? throw new InvalidOperationException("Approved export failed.");
+            if (first.ExportedCount != 2 || !File.Exists(first.ManifestPath) || IsApproved) throw new InvalidOperationException("Export output or approval state is incorrect.");
+            await CaptureAsync("07-results.png");
+            checks.Add("Save/restore cleared approval; Unicode review edit invalidated approval; approved export recorded two PDFs and manifest.");
+            ClickControl("Step2Button"); await NextFrameAsync();
+            if (IsApproved) throw new InvalidOperationException("Returning to review retained approval.");
+            GetControl<CheckBox>("ApprovalCheckBox").IsChecked = true;
+            var second = await ExportToAsync(root) ?? throw new InvalidOperationException("Repeated export failed.");
+            if (first.OutputDirectory == second.OutputDirectory || !File.Exists(first.ManifestPath)) throw new InvalidOperationException("Repeated export replaced the prior batch.");
+            Close();
+            await WaitAsync(() => OwnedWindows.Any(w => w.Title == "Close PaperStager?"), "Unsaved close confirmation");
+            dialog = OwnedWindows.Single(w => w.Title == "Close PaperStager?");
+            ClickDialog(dialog, "Cancel"); await WaitAsync(() => !OwnedWindows.Any(), "Cancelled close");
+            if (!IsVisible) throw new InvalidOperationException("Cancelled close hid the window.");
+            await SaveProjectToPathAsync(projectPath);
+            await RestoreProjectAsync(projectPath); ClickControl("Step2Button"); await NextFrameAsync();
+            if (ReviewPlan?.HasErrors != false || IsApproved) throw new InvalidOperationException("Project reopen failed or retained export approval.");
+            var unchanged = Project.Sources.All(s => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(s.Path))).Equals(s.Sha256, StringComparison.OrdinalIgnoreCase));
+            if (!unchanged) throw new InvalidOperationException("Source changed.");
+            checks.Add("Repeat export used a new folder; close Cancel preserved the window; saved project reopened and source hashes match.");
+            await File.WriteAllTextAsync(Path.Combine(root, "qa-result.json"), JsonSerializer.Serialize(new {
+                success = true, nativeWindow = IsVisible, captureKind = "Avalonia RenderTargetBitmap of displayed client area (not OS screenshot)",
+                sourcePreserved = unchanged, importedPages = 4, exportedDocumentsPerBatch = 2, thumbnailsRendered = RenderedThumbnailCount,
+                captures, checks, notExercised = new[] { "OS file/folder picker interaction", "OS drag-and-drop", "OS window decorations", "process restart (project reopen is covered)", "operation cancellation (deterministic headless regression covers import cancellation)" }
+            }, new JsonSerializerOptions { WriteIndented = true }));
+            _allowClose = true; lifetime.Shutdown(0);
+        } catch (Exception ex) {
+            await File.WriteAllTextAsync(Path.Combine(root, "qa-result.json"), JsonSerializer.Serialize(new { success = false, error = ex.ToString(), captures, checks }, new JsonSerializerOptions { WriteIndented = true }));
+            _allowClose = true; lifetime.Shutdown(1);
+        }
+
+        async Task CaptureAsync(string name) { await CaptureWindowAsync(this, Path.Combine(root, name)); captures.Add(name); }
+        void ClickControl(string name) => GetControl<Button>(name).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        T GetControl<T>(string name) where T : Control => this.GetVisualDescendants().OfType<T>().Single(c => c.Name == name);
+        void ScrollWorkspaceToEnd() { var scroll = GetControl<ScrollViewer>("WorkspaceScrollViewer"); scroll.Offset = new Vector(0, scroll.Extent.Height); }
+        static void ClickDialog(Window dialog, string label) => dialog.GetVisualDescendants().OfType<Button>().Single(b => Equals(b.Content, label)).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        async Task WaitAsync(Func<bool> done, string stage) {
+            for (var attempt = 0; attempt < 200 && !done(); attempt++) await Task.Delay(50);
+            if (!done()) throw new TimeoutException(stage + " did not complete within ten seconds. " + DiagnosticStatus);
+        }
+    }
+
+    private static async Task NextFrameAsync()
+    {
+        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
+        await Task.Delay(100);
+        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+    }
+
+    private static async Task CaptureWindowAsync(Window window, string path)
+    {
+        await NextFrameAsync();
+        if (!window.IsVisible || window.ClientSize.Width <= 0 || window.ClientSize.Height <= 0) throw new InvalidOperationException("Cannot capture an undisplayed window.");
+        using var image = new RenderTargetBitmap(new PixelSize((int)Math.Ceiling(window.ClientSize.Width), (int)Math.Ceiling(window.ClientSize.Height)), new Vector(96, 96));
+        image.Render(window); image.Save(path, PngBitmapEncoderOptions.Default);
+    }
+
     public async Task RunSmokeAsync(string? directory, IClassicDesktopStyleApplicationLifetime lifetime)
     {
         var root = directory ?? Path.Combine(Path.GetTempPath(), "paperstager-smoke-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(root);
@@ -377,13 +548,22 @@ public sealed class MainWindow : Window
         private readonly CheckBox _required;
         public StackPanel Panel { get; } = new() { Spacing = 5 };
         public Button Remove { get; } = new() { Content = "Remove", Padding = new Thickness(6, 3) };
-        public RuleEditor(FieldRule rule)
+        public RuleEditor(FieldRule rule, Action changed)
         {
             _name = new TextBox { Text = rule.Name, PlaceholderText = "Field name", Width = 120 };
             _kind = new ComboBox { ItemsSource = new[] { "After label", "Regex" }, SelectedIndex = rule.Kind == FieldRuleKind.AfterLabel ? 0 : 1, Width = 120 };
             _required = new CheckBox { Content = "Required", IsChecked = rule.Required };
             var top = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 }; top.Children.Add(_name); top.Children.Add(_kind); top.Children.Add(_required); top.Children.Add(Remove); Panel.Children.Add(top);
             _expression = new TextBox { Text = rule.Expression, PlaceholderText = "Label (Client:) or regular expression with capture group", AcceptsReturn = true, MaxHeight = 75 }; Panel.Children.Add(_expression);
+            var previous = Value;
+            void TrackChange()
+            {
+                var current = Value;
+                if (current.Name == previous.Name && current.Kind == previous.Kind && current.Expression == previous.Expression && current.Required == previous.Required) return;
+                previous = current; changed();
+            }
+            _name.TextChanged += (_, _) => TrackChange(); _expression.TextChanged += (_, _) => TrackChange();
+            _kind.SelectionChanged += (_, _) => TrackChange(); _required.IsCheckedChanged += (_, _) => TrackChange();
         }
         public FieldRule Value => new() { Name = _name.Text ?? "", Kind = _kind.SelectedIndex == 0 ? FieldRuleKind.AfterLabel : FieldRuleKind.Regex, Expression = _expression.Text ?? "", Required = _required.IsChecked == true };
     }

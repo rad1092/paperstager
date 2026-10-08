@@ -74,17 +74,23 @@ public sealed class ExportService(IExportFileWriter? writer = null)
                     using var input = PdfReader.Open(sourceStream, PdfDocumentOpenMode.Import);
                     if (input.SecuritySettings.IsEncrypted || input.PageCount != source.Pages.Count)
                         throw new InvalidDataException("The source PDF no longer matches the reviewed page data. Import it again.");
+                    // Revalidate immutable source bytes even for projects made by older versions.
+                    PdfStructureGuard.Validate(input, cancellationToken);
                     foreach (var document in sourceGroup)
                     {
                         cancellationToken.ThrowIfCancellationRequested();
                         active = recordMap[document.Id];
                         using var output = new PdfDocument();
+                        // Avoid PDFsharp synthesizing a new RGB transparency group on save.
+                        output.Options.ColorMode = PdfColorMode.Undefined;
                         output.Info.Creator = "PaperStager";
                         output.Info.Title = Path.GetFileNameWithoutExtension(document.FileName);
                         for (var number = document.StartPage; number <= document.EndPage; number++)
                         {
                             cancellationToken.ThrowIfCancellationRequested();
-                            output.AddPage(input.Pages[number - 1]);
+                            var sourcePage = input.Pages[number - 1];
+                            var outputPage = output.AddPage(sourcePage);
+                            PdfStructureGuard.PreservePageGroup(sourcePage, outputPage);
                         }
                         using var outputBytes = new MemoryStream();
                         output.Save(outputBytes, closeStream: false);

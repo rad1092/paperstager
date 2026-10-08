@@ -24,6 +24,7 @@ public sealed class PdfImportService
                     throw new InvalidDataException("Encrypted PDFs are not supported. Import an unencrypted copy that you are authorized to use.");
                 if (sharp.PageCount is < 1 or > MaximumPages)
                     throw new InvalidDataException($"Import requires 1–{MaximumPages} pages.");
+                PdfStructureGuard.Validate(sharp, cancellationToken);
                 using var pig = UglyToad.PdfPig.PdfDocument.Open(bytes);
                 if (sharp.PageCount != pig.NumberOfPages)
                     throw new InvalidDataException("The PDF engines disagree about the page count. Repair a separate copy before importing.");

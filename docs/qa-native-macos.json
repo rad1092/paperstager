@@ -1,0 +1,32 @@
+{
+  "success": true,
+  "nativeWindow": true,
+  "captureKind": "Avalonia RenderTargetBitmap of displayed client area (not OS screenshot)",
+  "sourcePreserved": true,
+  "importedPages": 4,
+  "exportedDocumentsPerBatch": 2,
+  "thumbnailsRendered": 8,
+  "captures": [
+    "01-import.png",
+    "02-boundaries.png",
+    "03-naming-template.png",
+    "04-unsaved-open-confirmation.png",
+    "05-review.png",
+    "06-approved-review.png",
+    "07-results.png"
+  ],
+  "checks": [
+    "Displayed demo button imported four pages; four PDF thumbnails rendered.",
+    "Boundary merge/split and repeated back navigation preserved edits.",
+    "Editing a saved naming template prompted before Open; Cancel preserved edits.",
+    "Save/restore cleared approval; Unicode review edit invalidated approval; approved export recorded two PDFs and manifest.",
+    "Repeat export used a new folder; close Cancel preserved the window; saved project reopened and source hashes match."
+  ],
+  "notExercised": [
+    "OS file/folder picker interaction",
+    "OS drag-and-drop",
+    "OS window decorations",
+    "process restart (project reopen is covered)",
+    "operation cancellation (deterministic headless regression covers import cancellation)"
+  ]
+}

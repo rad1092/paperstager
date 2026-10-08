@@ -4,7 +4,7 @@
 
 PaperStager is an open-source C# desktop app for macOS, Windows and Linux. It starts with PDFs you already have. Actual page thumbnails help you mark document boundaries; multiple independent text rules suggest naming fields; a review desk catches missing fields, invalid names and duplicate paths before you approve an export.
 
-![The native review desk](docs/screenshots/boundaries-macos.png)
+![The native review desk, captured by the app client renderer](docs/screenshots/boundaries-macos.png)
 
 ## Get started
 
@@ -42,7 +42,7 @@ dotnet test PaperStager.slnx -c Release --no-build
 dotnet run --project src/PaperStager.App -- --demo
 ```
 
-The core and GUI are C#. PDF rendering uses PDFium, text extraction uses PdfPig, and page copying uses PDFsharp. No commercial SDK or NAPS2 application code is embedded. See [third-party notices](THIRD-PARTY-NOTICES.md).
+The core and GUI are C#. PDF rendering uses PDFium, text extraction uses PdfPig, and page copying uses PDFsharp. No commercial SDK or NAPS2 application code is embedded. Unsupported PDF structures (including annotations, forms, layers/actions and non-default page scaling) are rejected before page copying; see the explicit [support boundary](docs/LIMITATIONS.md#pdf-structure-safety-boundary). See [third-party notices](THIRD-PARTY-NOTICES.md).
 
 The CI workflow builds and tests on macOS, Windows and Linux, creates self-contained archives, extracts them and runs the actual native window through import, thumbnails, project/template round trips and export **twice** to check restart. [Verification record](docs/VERIFICATION.md) distinguishes native checks from headless tests and untested limitations.
 

@@ -15,8 +15,16 @@ PaperStager uses the components below. Their respective owners retain their copy
 | PDFium native engine and embedded dependencies | 152.0.7947.0 | PDFium's BSD-style and Apache terms, plus the component-specific texts in the [exact binary-release license collection](third_party/pdfium-152.0.7947.0/licenses/) |
 | SkiaSharp managed bindings | 3.119.4 | MIT; [package license](third_party/packages/SkiaSharp-3.119.4/) |
 | HarfBuzzSharp managed bindings | 8.3.1.3 | MIT; [package license](third_party/packages/HarfBuzzSharp-8.3.1.3/) |
+| SkiaSharp and HarfBuzzSharp native assets | 3.119.4 / 8.3.1.3 | Upstream package license and compiled-component notices retained for each platform under `third_party/packages/`; includes FreeType, HarfBuzz, Skia and their dependencies. |
+| Avalonia ANGLE Windows native assets | 2.1.27548.20260419 | BSD-style and third-party terms; [package and native dependency notices](third_party/packages/Avalonia.Angle.Windows.Natives-2.1.27548.20260419/) |
+| MicroCom.Runtime | 0.11.6 | MIT; [license at the package's source revision](third_party/packages/MicroCom.Runtime-0.11.6/) |
+| Tmds.DBus.Protocol | 0.94.1 | MIT; [license at the package's source revision](third_party/packages/Tmds.DBus.Protocol-0.94.1/) |
+| Microsoft.Extensions.DependencyInjection.Abstractions / Microsoft.Extensions.Logging.Abstractions / System.Security.Cryptography.Pkcs | 8.0.2 / 8.0.3 / 8.0.1 | MIT and applicable third-party notices; exact package texts retained under `third_party/packages/`. |
+| .NET self-contained runtime | Actual patch recorded by each package | MIT and third-party terms; [10.0.12 runtime notices](third_party/dotnet-runtime-10.0.12/) retained from the restored runtime. Packaging must also retain the notices for the exact runtime it ships. |
 
-Versioned NuGet package hashes and source URLs are retained in `third_party/packages/*/provenance.json`. Additional upstream license files are recorded in [upstream-license-provenance.json](third_party/upstream-license-provenance.json). The actual package lock files and published dependency manifest remain authoritative for a particular binary release.
+The [dependency inventory](third_party/dependency-inventory.json) records all 32 resolved app lock-file dependencies, their NuGet content hashes, source revisions, license declarations and retained notice hashes. Individual package download provenance is also retained in `third_party/packages/*/provenance.json` where available. Additional upstream license files are recorded in [upstream-license-provenance.json](third_party/upstream-license-provenance.json). The actual package lock files and published dependency manifest remain authoritative for a particular binary release. The notice collection conservatively includes assets for platforms that a particular desktop archive may not contain.
+
+The ANGLE collection includes xxHash, Abseil, zlib/Chromium compression utilities, ASTC Encoder, RapidJSON and SPIR-V/Vulkan header notices selected from its [pinned build metadata](https://github.com/AvaloniaUI/angle/tree/1c89805903c1482166356d3b950d474973180e61). Upstream's RapidJSON license file also describes its separate `bin/jsonchecker` test component; PaperStager does not ship that test program. Retaining an upstream notice collection does not imply that every component mentioned in it is in every published archive.
 
 ## PDFium native binaries
 
@@ -52,3 +60,5 @@ A future SDK integration would need an LGPL compliance plan, including its licen
 ## Development dependencies
 
 Test runners, test SDKs and headless testing packages are development dependencies and must not be copied into the user application. If a future distribution includes them, retain their applicable license texts as well. Test-only dependencies are still subject to the repository's dependency/security checks.
+
+Avalonia.BuildServices 11.3.2 is a build dependency in the app's lock file; its [MIT license](third_party/packages/Avalonia.BuildServices-11.3.2/) is retained as well. These notices do not assert Developer ID signing, Windows Authenticode signing or Apple notarization; the current project does not provide those credentials.
