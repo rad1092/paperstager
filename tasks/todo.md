@@ -1,0 +1,6 @@
+- [ ] Dependencies + toolchain
+- [ ] Core + adversarial tests
+- [ ] Desktop workflow + headless tests
+- [ ] Native GUI verification
+- [ ] Documentation + license audit + scans
+- [ ] Packages + public repository + exact-SHA multi-OS CI

@@ -1,0 +1,365 @@
+{
+  "naps2_commit": "2b189e0edae6c0b4f9bdd97681bde8eea8b44661",
+  "pdfium_version": "152.0.7947.0",
+  "archives": [
+    {
+      "archive": "pdfium-mac-arm64.tgz",
+      "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium/7947/pdfium-mac-arm64.tgz",
+      "sha256": "aa9739354fc7bc8f200f3f3c9532bd5233298203051e094820272ccd9c997a77",
+      "binary": {
+        "name": "libpdfium.dylib",
+        "sha256": "8f674979f8457e8a99721412607e878580f8a702ad90d36d37adf571202b4087",
+        "git_blob": "b43650fb659381528f9c07754fcfb7bb24422f6c",
+        "naps2_git_blob": "b43650fb659381528f9c07754fcfb7bb24422f6c",
+        "matches_naps2": true
+      }
+    },
+    {
+      "archive": "pdfium-mac-x64.tgz",
+      "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium/7947/pdfium-mac-x64.tgz",
+      "sha256": "16d7a263b9e2f550d230ce81637697381b0ce898f2e3a22c7316594b15199d87",
+      "binary": {
+        "name": "libpdfium.dylib",
+        "sha256": "c4e3aea0889c840c0642585f9e1e5e397dbc539c0768d1873006ef63ad4a270f",
+        "git_blob": "b2fcbc3ad9427a6dafaf11eff78924ecf962b69f",
+        "naps2_git_blob": "b2fcbc3ad9427a6dafaf11eff78924ecf962b69f",
+        "matches_naps2": true
+      }
+    },
+    {
+      "archive": "pdfium-linux-x64.tgz",
+      "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium/7947/pdfium-linux-x64.tgz",
+      "sha256": "f73d69d309fe1f33cc7269dcc99be31ec44e1cf608e31d7e2fcc6545fc2f9323",
+      "binary": {
+        "name": "libpdfium.so",
+        "sha256": "61c9f745c6296a1050599a99a1ed985036411b591a11bd2a41bafe530ecb4f33",
+        "git_blob": "5886c744fbc8e2037bef60d338a0537c6633676a",
+        "naps2_git_blob": "5886c744fbc8e2037bef60d338a0537c6633676a",
+        "matches_naps2": true
+      }
+    },
+    {
+      "archive": "pdfium-linux-arm64.tgz",
+      "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium/7947/pdfium-linux-arm64.tgz",
+      "sha256": "4af22363364962975d823979d07769581a4ca5d9a0d4a4117a06e5bb6d2c8e2d",
+      "binary": {
+        "name": "libpdfium.so",
+        "sha256": "f5c8d54a498e2112fbcf53e866c4a5635e9839db3a36d88c4772e5384dabeac6",
+        "git_blob": "04cf8da75371a792bc0595e06366dd82e81c1e7b",
+        "naps2_git_blob": "04cf8da75371a792bc0595e06366dd82e81c1e7b",
+        "matches_naps2": true
+      }
+    },
+    {
+      "archive": "pdfium-win-x64.tgz",
+      "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium/7947/pdfium-win-x64.tgz",
+      "sha256": "75df6802fc090ad7c76ccc29ed80c3fcb1a375c775bbf8e522189174647b101f",
+      "binary": {
+        "name": "pdfium.dll",
+        "sha256": "cc2058add54b9da299a4496d526b79c375c6f0eb3a9000552a45c60f83765d55",
+        "git_blob": "bbc549343a87ef3b6111609eea2e5b5d2dd1fa25",
+        "naps2_git_blob": "bbc549343a87ef3b6111609eea2e5b5d2dd1fa25",
+        "matches_naps2": true
+      }
+    },
+    {
+      "archive": "pdfium-win-x86.tgz",
+      "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium/7947/pdfium-win-x86.tgz",
+      "sha256": "1885634136dbea51d90c933ae8bedbc93ff94186b998d8d7781716af5d60471e",
+      "binary": {
+        "name": "pdfium.dll",
+        "sha256": "48b5b35200b7c36bb117704f25200ded2e5f9590c4ced25fd8d58ba972b6aa1f",
+        "git_blob": "8e4cf4e6cd81a085de938e3b97db8c86c32eba36",
+        "naps2_git_blob": "8e4cf4e6cd81a085de938e3b97db8c86c32eba36",
+        "matches_naps2": true
+      }
+    },
+    {
+      "archive": "pdfium-win-arm64.tgz",
+      "url": "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium/7947/pdfium-win-arm64.tgz",
+      "sha256": "b9cee0f6b2e9f025ee5f4c4938dbe05009ca88330e6bc60f595aa0066b14dfc9",
+      "binary": {
+        "name": "pdfium.dll",
+        "sha256": "4255f92dd14657c228d03eb25a9c21cf42ccc14b19894ae500568ac80e2191cd",
+        "git_blob": "aa838b443e3e2d310a1af586fb23851d983db7a3",
+        "naps2_git_blob": "aa838b443e3e2d310a1af586fb23851d983db7a3",
+        "matches_naps2": true
+      }
+    }
+  ],
+  "licenses": [
+    {
+      "name": "abseil.txt",
+      "file": "licenses/abseil-c79a7fea0e.txt",
+      "sha256": "c79a7fea0e3cac04cd43f20e7b648e5a0ff8fa5344e644b0ee09ca1162b62747",
+      "platforms": [
+        "linux-arm64",
+        "linux-x64",
+        "mac-arm64",
+        "mac-x64"
+      ]
+    },
+    {
+      "name": "abseil.txt",
+      "file": "licenses/abseil-f54fff0b90.txt",
+      "sha256": "f54fff0b905df5b3464527c652a30e903b172d6dcab4d89b5e6f105d5e4a4603",
+      "platforms": [
+        "win-arm64",
+        "win-x64",
+        "win-x86"
+      ]
+    },
+    {
+      "name": "agg23.txt",
+      "file": "licenses/agg23-c110d3ea2a.txt",
+      "sha256": "c110d3ea2ad77467ce0dcff7d3337e6c8be8049a5103f4b9bd5fd911a77972e5",
+      "platforms": [
+        "linux-arm64",
+        "linux-x64",
+        "mac-arm64",
+        "mac-x64",
+        "win-arm64",
+        "win-x64",
+        "win-x86"
+      ]
+    },
+    {
+      "name": "fast_float.txt",
+      "file": "licenses/fast_float-bf1b57355f.txt",
+      "sha256": "bf1b57355feca8fce77ee95f48002f8d4789fb71b30ec7599c06cda4901fbb2b",
+      "platforms": [
+        "win-arm64",
+        "win-x64",
+        "win-x86"
+      ]
+    },
+    {
+      "name": "fast_float.txt",
+      "file": "licenses/fast_float-e562f3f974.txt",
+      "sha256": "e562f3f974ced7e69dd1db77b820b36bcf8f30377f1aa105723fba449c53c4e6",
+      "platforms": [
+        "linux-arm64",
+        "linux-x64",
+        "mac-arm64",
+        "mac-x64"
+      ]
+    },
+    {
+      "name": "freetype.txt",
+      "file": "licenses/freetype-f4b133e25d.txt",
+      "sha256": "f4b133e25df1f86ad3ffea453aa0e613f0474f34778dbbb3e437e7b2724937d8",
+      "platforms": [
+        "linux-arm64",
+        "linux-x64",
+        "mac-arm64",
+        "mac-x64",
+        "win-arm64",
+        "win-x64",
+        "win-x86"
+      ]
+    },
+    {
+      "name": "icu.txt",
+      "file": "licenses/icu-93679f4389.txt",
+      "sha256": "93679f4389d53b6835d89843f251844fb9bc455b35bab036d3c8e7abe497a47a",
+      "platforms": [
+        "win-arm64",
+        "win-x64",
+        "win-x86"
+      ]
+    },
+    {
+      "name": "icu.txt",
+      "file": "licenses/icu-e55522d81e.txt",
+      "sha256": "e55522d81edc687a341a4411e0776e54ca654e90147f354a90458aaced4116af",
+      "platforms": [
+        "linux-arm64",
+        "linux-x64",
+        "mac-arm64",
+        "mac-x64"
+      ]
+    },
+    {
+      "name": "lcms.txt",
+      "file": "licenses/lcms-7312b68c5b.txt",
+      "sha256": "7312b68c5b25e9bf2b828706fb4e29588f22705112f411fd42e1f7d84c3d139a",
+      "platforms": [
+        "linux-arm64",
+        "linux-x64",
+        "mac-arm64",
+        "mac-x64",
+        "win-arm64",
+        "win-x64",
+        "win-x86"
+      ]
+    },
+    {
+      "name": "libjpeg_turbo.ijg",
+      "file": "licenses/libjpeg_turbo-75815e3bf6.ijg",
+      "sha256": "75815e3bf6484201a3c3d17a1bbf10f2e8e3237f84df10a2357ea896db2a81d6",
+      "platforms": [
+        "linux-arm64",
+        "linux-x64",
+        "mac-arm64",
+        "mac-x64"
+      ]
+    },
+    {
+      "name": "libjpeg_turbo.ijg",
+      "file": "licenses/libjpeg_turbo-db16a04128.ijg",
+      "sha256": "db16a04128171879c60708d171b88d97345a2dd20f9bfc173680a4497c73f704",
+      "platforms": [
+        "win-arm64",
+        "win-x64",
+        "win-x86"
+      ]
+    },
+    {
+      "name": "libjpeg_turbo.md",
+      "file": "licenses/libjpeg_turbo-96f5b328ad.md",
+      "sha256": "96f5b328adbb78eeaaec6980d73fd558cb1e4d62560ed615646bc3cf5e532430",
+      "platforms": [
+        "linux-arm64",
+        "linux-x64",
+        "mac-arm64",
+        "mac-x64"
+      ]
+    },
+    {
+      "name": "libjpeg_turbo.md",
+      "file": "licenses/libjpeg_turbo-be2b2b5ab1.md",
+      "sha256": "be2b2b5ab168bce87bc3e31f2a5c5adba4b7f6e9e51d618e958d1d46972ebd95",
+      "platforms": [
+        "win-arm64",
+        "win-x64",
+        "win-x86"
+      ]
+    },
+    {
+      "name": "libopenjpeg.txt",
+      "file": "licenses/libopenjpeg-c5ab0890a7.txt",
+      "sha256": "c5ab0890a737c2dfa7ba675036554f6d17741d98629b0c2a145354d00617e6b2",
+      "platforms": [
+        "linux-arm64",
+        "linux-x64",
+        "mac-arm64",
+        "mac-x64",
+        "win-arm64",
+        "win-x64",
+        "win-x86"
+      ]
+    },
+    {
+      "name": "libpng.txt",
+      "file": "licenses/libpng-452390433b.txt",
+      "sha256": "452390433ba0f88aa3e2b122c647741b72a0c117cd6ed7a329b49785aecb5511",
+      "platforms": [
+        "win-arm64",
+        "win-x64",
+        "win-x86"
+      ]
+    },
+    {
+      "name": "libpng.txt",
+      "file": "licenses/libpng-bdb0a645ea.txt",
+      "sha256": "bdb0a645ea18c60507d0368379b1ac5474b92255fcc2d115e07486a7672ba526",
+      "platforms": [
+        "linux-arm64",
+        "linux-x64",
+        "mac-arm64",
+        "mac-x64"
+      ]
+    },
+    {
+      "name": "libtiff.txt",
+      "file": "licenses/libtiff-92b72ba97e.txt",
+      "sha256": "92b72ba97e6c2749c2a94bc0ef646b47080217f1e772a482b33cf5a5f98a6506",
+      "platforms": [
+        "linux-arm64",
+        "linux-x64",
+        "mac-arm64",
+        "mac-x64",
+        "win-arm64",
+        "win-x64",
+        "win-x86"
+      ]
+    },
+    {
+      "name": "llvm-libc.txt",
+      "file": "licenses/llvm-libc-3b6226c32e.txt",
+      "sha256": "3b6226c32e168c83b891d8d6f0d3c29c2116dc3ef93dc93c307b54f279ecf383",
+      "platforms": [
+        "win-arm64",
+        "win-x64",
+        "win-x86"
+      ]
+    },
+    {
+      "name": "llvm-libc.txt",
+      "file": "licenses/llvm-libc-ebcd9bbf78.txt",
+      "sha256": "ebcd9bbf783a73d05c53ba4d586b8d5813dcdf3bbec50265860ccc885e606f47",
+      "platforms": [
+        "linux-arm64",
+        "linux-x64",
+        "mac-arm64",
+        "mac-x64"
+      ]
+    },
+    {
+      "name": "pdfium.txt",
+      "file": "licenses/pdfium-1fe9dea718.txt",
+      "sha256": "1fe9dea718fbd75cf149adaf4d8a22a4335604d964ddb76d1b45383dec8668c9",
+      "platforms": [
+        "mac-arm64",
+        "mac-x64"
+      ]
+    },
+    {
+      "name": "pdfium.txt",
+      "file": "licenses/pdfium-961eacd963.txt",
+      "sha256": "961eacd9633fff6d051db7208b755e9210e30efac7adec3e6a6d52798f0ccf0e",
+      "platforms": [
+        "linux-arm64",
+        "linux-x64",
+        "win-arm64",
+        "win-x64",
+        "win-x86"
+      ]
+    },
+    {
+      "name": "simdutf.txt",
+      "file": "licenses/simdutf-c172a0ba93.txt",
+      "sha256": "c172a0ba936ff31230febb5dad869e25cb7c1a07480c7a381be8cf011bb52719",
+      "platforms": [
+        "win-arm64",
+        "win-x64",
+        "win-x86"
+      ]
+    },
+    {
+      "name": "simdutf.txt",
+      "file": "licenses/simdutf-fc8dbc04e0.txt",
+      "sha256": "fc8dbc04e03ad4efc08a647ffe7f995b811a95bc04c0e85a56d5277c6593fa5f",
+      "platforms": [
+        "linux-arm64",
+        "linux-x64",
+        "mac-arm64",
+        "mac-x64"
+      ]
+    },
+    {
+      "name": "zlib.txt",
+      "file": "licenses/zlib-33fd641c9f.txt",
+      "sha256": "33fd641c9f3b0e0be64bc78fea9e94807674cdd70c48477599226cb8956565fe",
+      "platforms": [
+        "linux-arm64",
+        "linux-x64",
+        "mac-arm64",
+        "mac-x64",
+        "win-arm64",
+        "win-x64",
+        "win-x86"
+      ]
+    }
+  ]
+}

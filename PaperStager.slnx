@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PaperStager.App/PaperStager.App.csproj" />
+    <Project Path="src/PaperStager.Core/PaperStager.Core.csproj" />
+    <Project Path="src/PaperStager.Rendering/PaperStager.Rendering.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PaperStager.App.Tests/PaperStager.App.Tests.csproj" />
+    <Project Path="tests/PaperStager.Core.Tests/PaperStager.Core.Tests.csproj" />
+  </Folder>
+</Solution>

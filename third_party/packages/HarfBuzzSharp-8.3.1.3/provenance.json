@@ -1,0 +1,14 @@
+{
+  "package": "HarfBuzzSharp",
+  "version": "8.3.1.3",
+  "license": "MIT",
+  "url": "https://api.nuget.org/v3-flatcontainer/harfbuzzsharp/8.3.1.3/harfbuzzsharp.8.3.1.3.nupkg",
+  "nupkg_sha256": "ffe644863a4eb3c078b4c3f0def0f2b90a861991c9116bf2dd668a31a0f09ab5",
+  "legal_files": [
+    {
+      "upstream_path": "LICENSE.txt",
+      "file": "LICENSE.txt",
+      "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+    }
+  ]
+}

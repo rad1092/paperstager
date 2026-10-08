@@ -1,0 +1,18 @@
+{
+  "package": "SkiaSharp.NativeAssets.macOS",
+  "version": "3.119.4",
+  "url": "https://api.nuget.org/v3-flatcontainer/skiasharp.nativeassets.macos/3.119.4/skiasharp.nativeassets.macos.3.119.4.nupkg",
+  "nupkg_sha256": "f7f2f539ce5bba337aa4a8d6eac25caf58cbdd12edf3f32ddcc98294e730cf2c",
+  "legal_files": [
+    {
+      "upstream_path": "LICENSE.txt",
+      "file": "LICENSE.txt",
+      "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+    },
+    {
+      "upstream_path": "THIRD-PARTY-NOTICES.txt",
+      "file": "THIRD-PARTY-NOTICES.txt",
+      "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
+    }
+  ]
+}

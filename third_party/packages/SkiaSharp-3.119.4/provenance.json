@@ -1,0 +1,14 @@
+{
+  "package": "SkiaSharp",
+  "version": "3.119.4",
+  "license": "MIT",
+  "url": "https://api.nuget.org/v3-flatcontainer/skiasharp/3.119.4/skiasharp.3.119.4.nupkg",
+  "nupkg_sha256": "e32a449d31945c0b9d169eb5bc676e1e3f589aab69888e49d703fdc1c384c176",
+  "legal_files": [
+    {
+      "upstream_path": "LICENSE.txt",
+      "file": "LICENSE.txt",
+      "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+    }
+  ]
+}
