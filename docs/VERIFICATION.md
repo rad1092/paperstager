@@ -23,6 +23,8 @@ External CUA app access failed to return twice and was aborted. It is not retrie
 
 ## Exact source revision and multi-OS packages
 
+The code candidate **5e761b3154dca443c361dbf2cbe7a12b032aec7d** passed all three OS jobs in [run 37720078722](https://github.com/rad1092/paperstager/actions/runs/37720078722), including tests, dependency/credential checks, package extraction, native launch and restart. Subsequent documentation-only closeout is revalidated by the version-tag workflow; its release notes record the final exact SHA. Release publication and re-download verification must both finish successfully in that tag run.
+
 [GitHub Actions](https://github.com/rad1092/paperstager/actions) builds/tests on macOS arm64, Windows x64 and Linux x64. Each job publishes a self-contained archive, verifies/extracts it, starts the actual native app, checks the import→render→review→export marker, closes and starts it again. macOS second launch uses the `.app` through LaunchServices. A 90-second app watchdog applies only to explicit synthetic QA/smoke modes.
 
 The first run, `37713035957` at `596fec2`, failed during locked restore on all three OSes and is **not** a passing multi-OS result. The fix declares all three runtime identifiers and regenerates lock files. Read the successful run associated with the release's **exact commit**; release publication depends on all three jobs succeeding. Release metadata records `sourceCommit`, native architecture and file hashes. The release workflow downloads the published ZIPs again and verifies SHA256SUMS, sidecars and commit identity. The GitHub run and release notes provide the final machine-generated revision/result.
