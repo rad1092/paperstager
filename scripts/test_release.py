@@ -2,6 +2,10 @@
 
 import json
 from pathlib import Path
+import plistlib
+import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 import zipfile
@@ -12,6 +16,53 @@ import security_scan
 
 
 class ReleaseTests(unittest.TestCase):
+    def test_macos_layout_rejects_loose_managed_payload(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            app = Path(temporary) / "PaperStager.app"
+            payload = app / "Contents" / "MacOS"
+            payload.mkdir(parents=True)
+            (payload / "PaperStager").write_bytes(bytes.fromhex("cffaedfe") + b"synthetic")
+            (payload / "Example.dll").write_bytes(b"MZ synthetic managed assembly")
+            with self.assertRaisesRegex(ValueError, "Non-Mach-O"):
+                release.macos_code_files(app)
+
+    @unittest.skipUnless(sys.platform == "darwin", "Requires Apple's native codesign tool")
+    def test_final_bundle_signature_survives_zip_and_rejects_tampering(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            app = root / "Package" / "PaperStager.app"
+            payload = app / "Contents" / "MacOS"
+            resources = app / "Contents" / "Resources"
+            (payload / "_macarm").mkdir(parents=True)
+            resources.mkdir()
+            # Copies only: never alter OS binaries or their signatures.
+            for target in (payload / "PaperStager", payload / "_macarm" / "helper"):
+                shutil.copyfile("/usr/bin/true", target)
+                target.chmod(0o755)
+            (resources / "notice.txt").write_text("original resource", encoding="utf-8")
+            with (app / "Contents" / "Info.plist").open("wb") as stream:
+                plistlib.dump({"CFBundleIdentifier": "org.paperstager.desktop", "CFBundleExecutable": "PaperStager",
+                              "CFBundlePackageType": "APPL"}, stream)
+            release.sign_macos_bundle(app)
+            with zipfile.ZipFile(root / "package.zip", "w") as archive:
+                for path in sorted((root / "Package").rglob("*")):
+                    if path.is_file():
+                        archive.write(path, path.relative_to(root))
+            unpacked = release.extract_checked(root / "package.zip", root / "extracted") / "PaperStager.app"
+            self.assertTrue(release.verify_macos_signature(unpacked)["success"])
+            notice = unpacked / "Contents" / "Resources" / "notice.txt"
+            notice.write_text("tampered resource", encoding="utf-8")
+            with self.assertRaises(subprocess.CalledProcessError):
+                release.verify_macos_signature(unpacked)
+            notice.write_text("original resource", encoding="utf-8")
+            release.verify_macos_signature(unpacked)
+            helper = unpacked / "Contents" / "MacOS" / "_macarm" / "helper"
+            data = bytearray(helper.read_bytes())
+            data[len(data) // 2] ^= 1
+            helper.write_bytes(data)
+            with self.assertRaises(subprocess.CalledProcessError):
+                release.verify_macos_signature(unpacked)
+
     def test_traversal_and_symlink_archives_are_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

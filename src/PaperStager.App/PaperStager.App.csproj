@@ -1,1 +1,19 @@
-<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>WinExe</OutputType><AssemblyName>PaperStager</AssemblyName></PropertyGroup><ItemGroup><PackageReference Include="Avalonia" Version="12.1.3"/><PackageReference Include="Avalonia.Desktop" Version="12.1.3"/><PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.3"/><PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.3"/><ProjectReference Include="../PaperStager.Core/PaperStager.Core.csproj"/><ProjectReference Include="../PaperStager.Rendering/PaperStager.Rendering.csproj"/></ItemGroup></Project>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>PaperStager</AssemblyName>
+    <!-- Keep analyzer dependencies stable for locked restore on every host. -->
+    <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+    <!-- Managed assemblies/config are embedded in the signed Mach-O apphost. -->
+    <PublishSingleFile Condition="'$(RuntimeIdentifier)' == 'osx-arm64'">true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>false</IncludeNativeLibrariesForSelfExtract>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.3"/>
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.3"/>
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.3"/>
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.3"/>
+    <ProjectReference Include="../PaperStager.Core/PaperStager.Core.csproj"/>
+    <ProjectReference Include="../PaperStager.Rendering/PaperStager.Rendering.csproj"/>
+  </ItemGroup>
+</Project>

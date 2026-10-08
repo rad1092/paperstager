@@ -8,7 +8,9 @@ PaperStager is an open-source C# desktop app for macOS, Windows and Linux. It st
 
 ## Get started
 
-Download the portable package for your operating system from [Releases](https://github.com/rad1092/paperstager/releases). Extract it into an ordinary folder. On macOS open `PaperStager.app`, on Windows `PaperStager.exe`, and on Linux run `./PaperStager`. Packages include the .NET runtime. Linux needs an X11 desktop and `libx11-6 libice6 libsm6 libfontconfig1`; CI tests Ubuntu. Packages are **unsigned and not notarized**. There is no installer, automatic updater or security-settings bypass.
+Download the portable package for your operating system from [Releases](https://github.com/rad1092/paperstager/releases). Extract it into an ordinary folder. On macOS open `PaperStager.app`, on Windows `PaperStager.exe`, and on Linux run `./PaperStager`. Packages include the .NET runtime. Linux needs an X11 desktop and `libx11-6 libice6 libsm6 libfontconfig1`; CI tests Ubuntu.
+
+Starting with **0.1.1**, the macOS bundle has an ad-hoc signature checked for integrity after packaging. This fixes the invalid bundle signature in 0.1.0. Ad-hoc signing does not establish a trusted developer identity: there is **no macOS Developer ID signature or Apple notarization**, and the Windows package has **no Authenticode signature**. OS or organization policies may block launch. There is no installer, automatic updater or security-settings bypass. See the [verification record](docs/VERIFICATION.md) for release-specific evidence.
 
 Use **Try a synthetic example** to inspect two fictitious documents, including a rotated page. No real invoices or personal data are included.
 

@@ -49,7 +49,9 @@ Do not assume preservation of digital signatures, document-level metadata, bookm
 
 Release archives include .NET and the selected native PDF/graphics libraries; the whole package must stay together. Linux needs the desktop dependencies listed in the [README](../README.md). A separate .NET installation does not update a self-contained archive: install a newer PaperStager release when its runtime/dependencies are updated. There is no automatic updater.
 
-This release has no macOS Developer ID signature, Apple notarization or Windows Authenticode signature. Some systems or organization policies may prevent launching it. The project does not provide instructions to disable those protections.
+Starting with 0.1.1, the complete macOS bundle and native code are ad-hoc signed and checked with `codesign --verify --deep --strict` after packaging and extraction. This checks that the signed contents remain intact; it does not certify the publisher or establish Gatekeeper trust. The invalid macOS bundle signature shipped in 0.1.0 is corrected in 0.1.1. See the [verification record](VERIFICATION.md) for the historical failure and release evidence.
+
+This release has no macOS Developer ID signature, Apple notarization or Windows Authenticode signature. Some systems or organization policies may prevent launching it even when signature integrity checks pass. The project does not provide instructions to disable those protections.
 
 PDF parsing and rendering use third-party libraries in the app process, not an isolated security sandbox. File-size limits, regex timeouts and filename checks do not make hostile PDFs safe or guarantee recovery from a native-engine crash or exhausted memory. The embedded PDFium version and full retained notices are listed in [Third-party notices](../THIRD-PARTY-NOTICES.md); a managed NuGet advisory check does not audit all native code compiled into those libraries.
 

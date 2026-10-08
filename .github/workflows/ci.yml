@@ -84,13 +84,14 @@ jobs:
           --configuration Release --runtime ${{ matrix.rid }} --self-contained true
           -p:RestoreLockedMode=true -p:NuGetAudit=true -p:NuGetAuditMode=all -p:NuGetAuditLevel=moderate
           -warnaserror:NU1900,NU1902,NU1903,NU1904,NU1905
-          -p:PublishSingleFile=false -p:PublishTrimmed=false -p:DebugType=None -p:DebugSymbols=false
+          -p:PublishTrimmed=false -p:DebugType=None -p:DebugSymbols=false
           -p:ContinuousIntegrationBuild=true -p:RepositoryCommit=${{ github.sha }}
           --output artifacts/publish/${{ matrix.rid }}
       - name: Package native app with licenses and source metadata
         run: >-
           python scripts/release.py package
           --publish-dir artifacts/publish/${{ matrix.rid }}
+          --runtime-config src/PaperStager.App/bin/Release/net10.0/${{ matrix.rid }}/PaperStager.runtimeconfig.json
           --rid ${{ matrix.rid }} --sha ${{ github.sha }}
       - name: Unpack, launch, exercise workflow, close, and restart
         run: >-
@@ -160,7 +161,8 @@ jobs:
               'Each portable ZIP contains the .NET runtime, documentation, and third-party notices. '
               'Read the included quickstart for native system requirements and launch instructions.\n\n'
               'Packages passed native unpack-and-launch smoke tests on all three operating systems, '
-              'including a second launch. These packages are not Developer ID signed, Authenticode signed, '
+              'including a second launch. The macOS app has a verified ad-hoc bundle signature for integrity. '
+              'These packages are not Developer ID signed, Authenticode signed, '
               'or Apple notarized. Do not disable operating-system security controls.\n\n'
               f"Source commit: `{os.environ['RELEASE_SHA']}`\n\n"
               'Check downloads against `SHA256SUMS` before running them.\n', encoding='utf-8')
@@ -180,3 +182,39 @@ jobs:
           cd artifacts/downloaded && sha256sum --check SHA256SUMS
           cd ../..
           python3 scripts/release.py checksums --directory artifacts/downloaded --sha "$RELEASE_SHA" --tag "$RELEASE_TAG"
+
+  verify-public-macos:
+    name: Verify public macOS signature and launch
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: release
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact release tooling
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Install Python for release verification
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.14'
+      - name: Download public macOS package
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: >-
+          gh release download "$RELEASE_TAG" --dir artifacts/downloaded
+          --pattern '*-osx-arm64.zip' --pattern '*-osx-arm64.zip.sha256'
+      - name: Verify extracted signatures, native launch and restart
+        run: >-
+          python3 scripts/release.py smoke --archive artifacts/downloaded/PaperStager-*-osx-arm64.zip
+          --sha ${{ github.sha }} --output artifacts/public-macos
+      - name: Preserve public-download verification evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: public-macos-${{ github.sha }}
+          path: artifacts/public-macos/
+          if-no-files-found: error
+          retention-days: 14

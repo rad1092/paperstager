@@ -22,6 +22,8 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
 RIDS = ("osx-arm64", "win-x64", "linux-x64")
+MACHO_MAGICS = {bytes.fromhex(value) for value in (
+    "feedface", "cefaedfe", "feedfacf", "cffaedfe", "cafebabe", "bebafeca", "cafebabf", "bfbafeca")}
 
 
 def sha256(path: Path) -> str:
@@ -32,6 +34,55 @@ def sha256(path: Path) -> str:
 def write_json(path: Path, data: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def macos_code_files(app: Path) -> list[Path]:
+    """A single-file .NET app keeps only native code under Contents/MacOS."""
+    payload = app / "Contents" / "MacOS"
+    code = []
+    for path in sorted(payload.rglob("*")):
+        if path.is_symlink():
+            raise ValueError("macOS executable payload must not contain symbolic links.")
+        if path.is_file():
+            with path.open("rb") as stream:
+                magic = stream.read(4)
+            if magic not in MACHO_MAGICS:
+                raise ValueError(f"Non-Mach-O file in Contents/MacOS; publish a single-file app: {path.name}")
+            code.append(path)
+    if payload / "PaperStager" not in code:
+        raise ValueError("macOS application executable is missing.")
+    return sorted(code, key=lambda path: (-len(path.parts), path.as_posix()))
+
+
+def codesign(*arguments: str) -> str:
+    if sys.platform != "darwin":
+        raise ValueError("macOS package signing and verification require a macOS host.")
+    result = subprocess.run(["/usr/bin/codesign", *arguments], capture_output=True, text=True, check=True)
+    return (result.stdout + result.stderr).strip()
+
+
+def verify_macos_signature(app: Path) -> dict:
+    code = macos_code_files(app)
+    # Explicit checks cover native libraries in nonstandard .NET subdirectories too.
+    for path in code:
+        codesign("--verify", "--strict", "--all-architectures", str(path))
+    verification = codesign("--verify", "--deep", "--strict", "--all-architectures", "--verbose=2", str(app))
+    display = codesign("--display", "--verbose=4", str(app))
+    if "Signature=adhoc" not in display or "Identifier=org.paperstager.desktop\n" not in display:
+        raise ValueError("The final macOS app must have its own ad-hoc bundle signature.")
+    return {"success": True, "kind": "ad-hoc", "deepStrict": True,
+            "nativeCodeFiles": [path.relative_to(app).as_posix() for path in code],
+            "verification": verification, "display": display}
+
+
+def sign_macos_bundle(app: Path) -> dict:
+    # Apple TN2206: sign nested code inside-out, never use --deep for signing.
+    for path in macos_code_files(app):
+        if path != app / "Contents" / "MacOS" / "PaperStager":
+            codesign("--force", "--sign", "-", "--timestamp=none",
+                     "--preserve-metadata=identifier,entitlements,flags,runtime", str(path))
+    codesign("--force", "--sign", "-", "--timestamp=none", str(app))
+    return verify_macos_signature(app)
 
 
 def package(args: argparse.Namespace) -> None:
@@ -47,9 +98,10 @@ def package(args: argparse.Namespace) -> None:
     executable_name = "PaperStager.exe" if args.rid.startswith("win-") else "PaperStager"
     if not (publish_dir / executable_name).is_file():
         raise ValueError(f"Published executable is missing: {executable_name}")
-    if not (publish_dir / "PaperStager.runtimeconfig.json").is_file():
+    runtime_config = args.runtime_config or publish_dir / "PaperStager.runtimeconfig.json"
+    if not runtime_config.is_file():
         raise ValueError("Published runtime configuration is missing.")
-    runtime = json.loads((publish_dir / "PaperStager.runtimeconfig.json").read_text(encoding="utf-8"))
+    runtime = json.loads(runtime_config.read_text(encoding="utf-8"))
     if "includedFrameworks" not in runtime.get("runtimeOptions", {}):
         raise ValueError("Release must be self-contained; the .NET runtime must be included.")
     frameworks = runtime["runtimeOptions"]["includedFrameworks"]
@@ -122,11 +174,17 @@ def package(args: argparse.Namespace) -> None:
             "sourceCommit": revision, "executable": executable,
             "notices": Path(args.notices).name,
             "selfContained": True, "developerIdSigned": False,
+            "adHocSigned": args.rid.startswith("osx-"),
             "runtimeVersion": runtime_version, "authenticodeSigned": False, "notarized": False,
         }
         write_json(stage / "package-info.json", metadata)
         if resources != stage:
             write_json(resources / "package-info.json", metadata)
+            # The runtime config is embedded in the apphost; retain build evidence as a resource.
+            shutil.copy2(runtime_config, resources / "PaperStager.runtimeconfig.json")
+            signature = sign_macos_bundle(stage / "PaperStager.app")
+            # Nothing inside the sealed app may change after signing.
+            write_json(stage / "macos-signature.json", signature)
         files = {}
         for file in sorted(stage.rglob("*")):
             if file.is_symlink():
@@ -240,6 +298,12 @@ def smoke(args: argparse.Namespace) -> None:
         if stage.name != f"PaperStager-{metadata.get('version')}-{expected_rid}" or archive.stem != stage.name:
             raise ValueError("Package directory and archive names must match its version and runtime.")
         validate_payload(stage, metadata)
+        signature = None
+        if expected_rid.startswith("osx-"):
+            if metadata.get("adHocSigned") is not True:
+                raise ValueError("macOS package metadata does not confirm final ad-hoc signing.")
+            signature = verify_macos_signature(stage / "PaperStager.app")
+            write_json(args.output / "macos-signature.json", signature)
         executable = (stage / metadata["executable"]).resolve(strict=True)
         if not executable.is_relative_to(stage.resolve()):
             raise ValueError("Package executable points outside its package.")
@@ -266,9 +330,12 @@ def smoke(args: argparse.Namespace) -> None:
                 raise ValueError(f"Native launch {launch} failed with exit status {status}.")
             validate_marker(marker)
             results.append({"launch": launch, "mode": launch_mode, "exitCode": status, "marker": marker})
+        validate_payload(stage, metadata)
+        if signature is not None:
+            verify_macos_signature(stage / "PaperStager.app")
     write_json(args.output / "package-smoke.json", {
         "success": True, "archive": archive.name, "sha256": expected_digest,
-        "sourceCommit": args.sha, "launches": results,
+        "sourceCommit": args.sha, "launches": results, "macosSignature": signature,
     })
     print(f"Native package launch and restart passed: {archive.name}")
 
@@ -308,6 +375,8 @@ def main() -> int:
     pack.add_argument("--sha")
     pack.add_argument("--notices", default="THIRD-PARTY-NOTICES.md")
     pack.add_argument("--runtime-package-dir", type=Path, help="Override the resolved runtime NuGet package directory.")
+    pack.add_argument("--runtime-config", type=Path,
+                      help="Build runtime configuration, required when single-file publishing embeds it.")
     pack.set_defaults(handler=package)
     launch = commands.add_parser("smoke")
     launch.add_argument("--archive", required=True, type=Path)

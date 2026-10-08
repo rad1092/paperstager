@@ -6,7 +6,7 @@ PaperStager는 기존 PDF 묶음을 문서별로 나누고, 파일명을 직접 
 
 [GitHub Releases](https://github.com/rad1092/paperstager/releases)에서 운영체제와 CPU에 맞는 압축 파일을 받아 **폴더 전체를** 풉니다. macOS에서는 `PaperStager.app`, Windows에서는 `PaperStager.exe`, Linux에서는 `./PaperStager`를 실행합니다. 실행 파일만 다른 곳으로 옮기면 필요한 라이브러리를 찾지 못할 수 있습니다. 배포본은 .NET 런타임을 포함합니다. Linux 실행 환경과 소스 빌드 방법은 [README](../README.md)를 참고하세요.
 
-현재 배포본에는 macOS Developer ID 서명·Apple 공증과 Windows Authenticode 서명이 없습니다. 운영체제나 조직 보안 정책에서 실행을 차단할 수 있습니다. 배포 출처와 체크섬을 확인하고, 차단되는 환경에서는 조직이 승인한 방법이나 소스 빌드를 사용하세요. 보안 기능을 끄는 절차는 제공하지 않습니다.
+**0.1.1부터 macOS 앱 묶음에는 ad-hoc 서명이 적용되며**, 압축을 푼 뒤에도 서명 무결성을 검증합니다. 이는 0.1.0의 잘못된 앱 묶음 서명을 고친 것으로, 파일이 서명 후 변경되지 않았는지 확인하는 기능입니다. 개발자 신원을 인증하는 macOS Developer ID 서명·Apple 공증은 없으며, Windows Authenticode 서명도 없습니다. 따라서 운영체제나 조직 보안 정책에서 실행을 차단할 수 있습니다. 배포 출처와 체크섬을 확인하고, 차단되는 환경에서는 조직이 승인한 방법이나 소스 빌드를 사용하세요. 보안 기능을 끄는 절차는 제공하지 않습니다. 버전별 결과는 [검증 기록](VERIFICATION.md)을 참고하세요.
 
 ## 먼저 예제 한 번 내보내기
 
