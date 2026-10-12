@@ -10,14 +10,22 @@ no scanner, OCR service, account or remote upload to configure.
    including the rotated-page example. Names come from the configured text
    rules and your edits; they are not inferred from a business system.
 3. Visit **Review & export**. Inspect both proposed filenames. Correct any
-   missing field, invalid name or duplicate before approving.
+   missing field, invalid name or duplicate. After any correction, click
+   **Refresh plan after edits** and review the updated names and errors again.
+   Editing clears the reviewed plan and its approval; checking the approval
+   box alone cannot enable export until this refresh succeeds.
 4. Check the approval box and choose a new, empty practice output folder. Open
    the created batch folder: expect two PDFs and `manifest.json`.
 5. Open both PDFs in your usual reader. Compare their pages with the previews.
    The manifest records the original source hashes/page ranges and output
    hashes/names, so you can trace each result.
-6. Save a project and reopen it to reuse the work. Export approval is deliberately
-   not saved; review and approve again before another export.
+6. Save a project and reopen it immediately to check the round trip. The synthetic
+   PDF lives in the operating-system temporary directory: a saved project stores
+   its absolute path, not a copy of the PDF. Temporary-file cleanup can leave
+   the saved metadata without a source for previews or export. For work you
+   need to keep, import PDFs from a durable folder and retain them at those paths.
+   Export approval is deliberately not saved; review and approve again before
+   another export.
 
 The app reads source PDFs and creates new output files. Do not interpret a
 failed or cancelled export as a completed batch. Keep the saved project and
