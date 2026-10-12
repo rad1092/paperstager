@@ -14,6 +14,9 @@ Starting with **0.1.1**, the macOS bundle has an ad-hoc signature checked for in
 
 Use **Try a synthetic example** to inspect two fictitious documents, including a rotated page. No real invoices or personal data are included.
 
+Follow [the first-batch walkthrough](docs/FIRST-RUN.md) to confirm four page
+previews become two exported documents and a manifest before using your own PDFs.
+
 1. **Import PDFs** by dropping them into the window or choosing files.
 2. **Boundaries & names:** check the first page of every document. Select text and add label/regex naming rules, or add rules directly. Use a template such as `{date}_{client}_{reference}`.
 3. **Review & export:** correct extracted fields, skip documents with a reason, and refresh the proposed names. Check the approval box, then choose an output folder.
