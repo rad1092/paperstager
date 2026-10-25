@@ -92,6 +92,20 @@ public sealed class PersistenceTests
     }
 
     [Fact]
+    public async Task DanglingDocumentSourceIsRejectedOnLoadAndSave()
+    {
+        using var workspace = new TestWorkspace();
+        var project = await workspace.CreateProjectAsync();
+        var path = workspace.PathFor("dangling-source.json");
+        project.Documents[0].SourceId = "missing-source";
+        var json = System.Text.Json.JsonSerializer.Serialize(project);
+        await File.WriteAllTextAsync(path, json);
+        await Assert.ThrowsAsync<InvalidDataException>(() => new ProjectStore().LoadAsync(path));
+        await Assert.ThrowsAsync<InvalidDataException>(() => new ProjectStore().SaveAsync(path, project));
+        Assert.Equal(json, await File.ReadAllTextAsync(path));
+    }
+
+    [Fact]
     public async Task UnknownProjectVersionIsRejectedOnLoad()
     {
         using var workspace = new TestWorkspace();

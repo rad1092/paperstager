@@ -1,0 +1,4 @@
+# Retained third-party notices and provenance use upstream byte-level hashes.
+# Preserve each original line ending on every checkout, including Windows.
+# Some upstream files are CRLF already; do not normalize them to LF.
+third_party/** -text

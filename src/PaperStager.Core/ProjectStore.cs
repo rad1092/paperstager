@@ -4,6 +4,8 @@ namespace PaperStager.Core;
 
 public sealed class ProjectStore
 {
+    public const int MaximumSources = 100;
+    public const int MaximumDocuments = 10000;
     public Task SaveAsync(string path, ReviewProject project, CancellationToken cancellationToken = default)
     {
         ProjectValidation.ValidateStructure(project);
@@ -92,7 +94,7 @@ internal static class ProjectValidation
         if (project.Version != 1) throw new InvalidDataException("This project version is unsupported.");
         if (project.Sources is null || project.Documents is null || project.Template is null)
             throw new InvalidDataException("Project sources, documents, or template are missing.");
-        if (project.Sources.Count > 100 || project.Documents.Count > 10000)
+        if (project.Sources.Count > ProjectStore.MaximumSources || project.Documents.Count > ProjectStore.MaximumDocuments)
             throw new InvalidDataException("Use a smaller batch (at most 100 sources and 10,000 documents).");
         var sourceIds = new HashSet<string>(StringComparer.Ordinal);
         foreach (var source in project.Sources)
@@ -114,10 +116,10 @@ internal static class ProjectValidation
         var documentIds = new HashSet<string>(StringComparer.Ordinal);
         foreach (var document in project.Documents)
         {
-            if (document is null || string.IsNullOrWhiteSpace(document.Id) || !documentIds.Add(document.Id) || document.SourceId is null ||
+            if (document is null || string.IsNullOrWhiteSpace(document.Id) || !documentIds.Add(document.Id) || document.SourceId is null || !sourceIds.Contains(document.SourceId) ||
                 document.ManualFields is null || document.SkipReason is null || document.ManualFields.Count > 100 ||
                 document.ManualFields.Any(x => x.Key.Length > 100 || x.Value is null || x.Value.Length > 10000))
-                throw new InvalidDataException("The project contains an invalid document or manual field.");
+                throw new InvalidDataException("The project contains an invalid document, missing source reference, or manual field.");
         }
         if (project.Template.Name is null || project.Template.Pattern is null || project.Template.Fields is null ||
             project.Template.Fields.Any(x => x is null || x.Name is null || x.Expression is null))

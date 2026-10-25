@@ -1,0 +1,22 @@
+{
+  "package": "Microsoft.NET.ILLink.Tasks",
+  "version": "10.0.12",
+  "license": "MIT",
+  "url": "https://api.nuget.org/v3-flatcontainer/microsoft.net.illink.tasks/10.0.12/microsoft.net.illink.tasks.10.0.12.nupkg",
+  "nupkg_sha256": "37aa984da51fdc01cc7d57a8647893392f3539cdd5a1d32ce4982be5309bc08b",
+  "nuget_content_hash": "xi+BDjFpW+Sb+MHFHaH6Y/gV9I8BluFwRXc1QyCdoZbIK26eNiBeFuMTe/FMwc33G1wdHCyDg7CVTmb8OdQrMQ==",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dotnet/dotnet",
+    "commit": "95017c711e6afc1085133d440e42b4bd78155701"
+  },
+  "scope": "Build dependency used by single-file publishing; not included in the published application payload.",
+  "license_source": "The package declares the MIT license expression in its nuspec; it does not contain a separate license text file.",
+  "legal_files": [
+    {
+      "upstream_path": "THIRD-PARTY-NOTICES.TXT",
+      "file": "THIRD-PARTY-NOTICES.TXT",
+      "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21"
+    }
+  ]
+}

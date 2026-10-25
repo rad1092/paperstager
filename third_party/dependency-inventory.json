@@ -438,6 +438,25 @@
     ]
   },
   {
+    "package": "Microsoft.NET.ILLink.Tasks",
+    "version": "10.0.12",
+    "nuget_content_hash": "xi+BDjFpW+Sb+MHFHaH6Y/gV9I8BluFwRXc1QyCdoZbIK26eNiBeFuMTe/FMwc33G1wdHCyDg7CVTmb8OdQrMQ==",
+    "license": "MIT",
+    "license_type": "expression",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/dotnet/dotnet",
+      "commit": "95017c711e6afc1085133d440e42b4bd78155701"
+    },
+    "scope": "Build dependency; not included in the published application payload.",
+    "retained_notices": [
+      {
+        "file": "packages/Microsoft.NET.ILLink.Tasks-10.0.12/THIRD-PARTY-NOTICES.TXT",
+        "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21"
+      }
+    ]
+  },
+  {
     "package": "NAPS2.Pdfium.Binaries",
     "version": "1.3.0",
     "nuget_content_hash": "YoucjhTDLzcVNTIe2kM0wwIK77Mq8b51iHjCblfiaiAr7XMydZ4da7LZLt7jjPjKJtXa5p6mL+J08fP8AASXhw==",

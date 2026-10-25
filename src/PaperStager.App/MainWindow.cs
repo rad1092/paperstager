@@ -145,6 +145,11 @@ public sealed class MainWindow : Window
             {
                 token.ThrowIfCancellationRequested();
                 if (Project.Sources.Any(s => Path.GetFullPath(s.Path) == Path.GetFullPath(path))) { SetStatus("That PDF is already in this project."); continue; }
+                if (Project.Sources.Count >= ProjectStore.MaximumSources || Project.Documents.Count >= ProjectStore.MaximumDocuments)
+                {
+                    _importIssues.Add("Import stopped before reading another PDF: a project supports at most 100 sources and 10,000 document groups. Remove a source or combine groups before adding more.");
+                    break;
+                }
                 try {
                     SetStatus($"Reading {Path.GetFileName(path)}…");
                     var source = await _importPdf(path, token);
@@ -197,7 +202,10 @@ public sealed class MainWindow : Window
             var preview = new Image { Width = 120, Height = 160, Stretch = Stretch.Uniform }; tile.Children.Add(preview);
             var info = new StackPanel { Spacing = 8 }; info.Children.Add(Text($"Page {page.Number}", 18));
             var boundary = new CheckBox { Content = "New document starts here", IsChecked = starts, IsEnabled = page.Number != 1 };
-            boundary.IsCheckedChanged += (_, _) => ToggleBoundary(_selectedSource.Id, page.Number, boundary.IsChecked == true); info.Children.Add(boundary);
+            boundary.IsCheckedChanged += (_, _) => {
+                ToggleBoundary(_selectedSource.Id, page.Number, boundary.IsChecked == true);
+                boundary.IsChecked = Project.Documents.Any(d => d.SourceId == _selectedSource.Id && d.StartPage == page.Number);
+            }; info.Children.Add(boundary);
             info.Children.Add(ActionButton("Read page text", () => { if (_sourceText != null) _sourceText.Text = page.Text; }));
             info.Children.Add(Text(string.IsNullOrWhiteSpace(page.Text) ? "No searchable text — manual fields needed" : $"{page.Text.Length} text characters", 12)); Grid.SetColumn(info, 1); tile.Children.Add(info); pageList.Children.Add(Card(tile));
             _ = LoadThumbnailAsync(_selectedSource.Path, page.Number, preview);
@@ -229,7 +237,13 @@ public sealed class MainWindow : Window
     {
         var source = Project.Sources.Single(s => s.Id == sourceId);
         var boundaries = Project.Documents.Where(d => d.SourceId == sourceId).Select(d => d.StartPage).ToHashSet();
-        if (starts) boundaries.Add(page); else if (page != 1) boundaries.Remove(page);
+        if (boundaries.Contains(page) == starts || (page == 1 && !starts)) return;
+        if (starts && Project.Documents.Count >= ProjectStore.MaximumDocuments)
+        {
+            SetStatus("A project supports at most 10,000 document groups. Combine groups or remove a source before adding another boundary.");
+            return;
+        }
+        if (starts) boundaries.Add(page); else boundaries.Remove(page);
         var old = Project.Documents.Where(d => d.SourceId == sourceId).ToList();
         var docs = DocumentService.Split(source, boundaries);
         foreach (var doc in docs) { var match = old.FirstOrDefault(d => d.StartPage == doc.StartPage && d.EndPage == doc.EndPage); if (match != null) { doc.ManualFields = new(match.ManualFields); doc.Skip = match.Skip; doc.SkipReason = match.SkipReason; } }

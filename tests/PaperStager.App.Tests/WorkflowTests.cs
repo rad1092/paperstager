@@ -113,6 +113,112 @@ public sealed class WorkflowTests
     }
 
     [AvaloniaFact]
+    public async Task SourceLimitStopsSingleAndAdditionalImportsBeforeReading()
+    {
+        foreach (var (existing, requested, allowed) in new[] { (0, 101, 100), (99, 2, 1), (100, 1, 0) })
+        {
+            var reads = 0;
+            var window = new MainWindow((path, _) => { reads++; return Task.FromResult(MetadataSource(path)); });
+            window.Show();
+            try
+            {
+                for (var index = 0; index < existing; index++)
+                {
+                    var source = MetadataSource(Path.Combine(Path.GetTempPath(), $"existing-{index}.pdf"));
+                    window.Project.Sources.Add(source);
+                    window.Project.Documents.AddRange(DocumentService.Split(source, [1]));
+                }
+                await window.LoadPathsAsync(Enumerable.Range(0, requested).Select(index => Path.Combine(Path.GetTempPath(), $"new-{index}.pdf")));
+                Assert.Equal(allowed, reads);
+                Assert.Equal(existing + allowed, window.Project.Sources.Count);
+                Assert.Equal(existing + allowed, window.Project.Documents.Count);
+                Assert.False(new PlanningService().CreatePlan(window.Project).HasErrors);
+                Assert.Contains("100", window.DiagnosticStatus);
+            }
+            finally { await CloseAsync(window); }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task DocumentLimitStopsImportBeforeReadingAndPreservesProject()
+    {
+        var reads = 0;
+        var window = new MainWindow((path, _) => { reads++; return Task.FromResult(MetadataSource(path)); });
+        window.Show();
+        try
+        {
+            for (var index = 0; index < 2; index++)
+            {
+                var source = MetadataSource(Path.Combine(Path.GetTempPath(), $"full-{index}.pdf"), 5000);
+                window.Project.Sources.Add(source);
+                window.Project.Documents.AddRange(DocumentService.Split(source, Enumerable.Range(1, 5000)));
+            }
+            var before = JsonSerializer.Serialize(window.Project);
+            await window.LoadPathsAsync([Path.Combine(Path.GetTempPath(), "extra.pdf")]);
+            Assert.Equal(0, reads);
+            Assert.Equal(before, JsonSerializer.Serialize(window.Project));
+            Assert.Contains("10,000", window.DiagnosticStatus);
+        }
+        finally { await CloseAsync(window); }
+    }
+
+    [AvaloniaFact]
+    public async Task BoundaryLimitRejectsOnlyAdditionalGroupsWithoutLosingEdits()
+    {
+        var window = new MainWindow();
+        window.Show();
+        try
+        {
+            foreach (var count in new[] { 5000, 4999 })
+            {
+                var source = MetadataSource(Path.Combine(Path.GetTempPath(), $"boundary-{count}.pdf"), count);
+                window.Project.Sources.Add(source);
+                window.Project.Documents.AddRange(DocumentService.Split(source, Enumerable.Range(1, count)));
+            }
+            var last = MetadataSource(Path.Combine(Path.GetTempPath(), "boundary-last.pdf"), 2);
+            window.Project.Sources.Add(last);
+            window.Project.Documents.AddRange(DocumentService.Split(last, [1]));
+            window.Project.Documents[^1].ManualFields["verified"] = "Keep this value";
+            var before = JsonSerializer.Serialize(window.Project);
+            window.ToggleBoundary(last.Id, 2, true);
+            Assert.Equal(before, JsonSerializer.Serialize(window.Project));
+            Assert.Contains("10,000", window.DiagnosticStatus);
+            window.ToggleBoundary(window.Project.Sources[0].Id, 2, false);
+            Assert.Equal(9999, window.Project.Documents.Count);
+            window.ToggleBoundary(last.Id, 2, true);
+            Assert.Equal(10000, window.Project.Documents.Count);
+            Assert.False(new PlanningService().CreatePlan(window.Project).HasErrors);
+        }
+        finally { await CloseAsync(window); }
+    }
+
+    [AvaloniaFact]
+    public async Task DamagedProjectCannotReplaceCurrentUnsavedProject()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "paperstager-dangling-" + Guid.NewGuid().ToString("N") + ".json");
+        var window = new MainWindow((sourcePath, _) => Task.FromResult(MetadataSource(sourcePath)));
+        window.Show();
+        try
+        {
+            await window.LoadPathsAsync([Path.Combine(Path.GetTempPath(), "current.pdf")]);
+            var before = JsonSerializer.Serialize(window.Project);
+            var damaged = JsonSerializer.Deserialize<ReviewProject>(before)!;
+            damaged.Documents[0].SourceId = "missing-source";
+            await File.WriteAllTextAsync(path, JsonSerializer.Serialize(damaged));
+            await Assert.ThrowsAsync<InvalidDataException>(() => window.RestoreProjectAsync(path));
+            Assert.Equal(before, JsonSerializer.Serialize(window.Project));
+            Assert.True(window.HasUnsavedChanges);
+        }
+        finally { await CloseAsync(window); File.Delete(path); }
+    }
+
+    private static SourcePdf MetadataSource(string path, int pages = 1) => new()
+    {
+        Path = path, Sha256 = new string('A', 64),
+        Pages = Enumerable.Range(1, pages).Select(number => new PdfPageInfo { Number = number, Text = "Synthetic metadata", WidthPoints = 612, HeightPoints = 792 }).ToList()
+    };
+
+    [AvaloniaFact]
     public async Task EmptyProjectCannotSkipImportOrExport()
     {
         var window = new MainWindow();
