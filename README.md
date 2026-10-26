@@ -40,7 +40,7 @@ PaperStager is not a scanner, OCR engine, document-management system or PDF anno
 
 ## Build and verify
 
-Install the official .NET 10 SDK, then:
+Install the official .NET SDK 10.0.401 (`global.json` pins it, so the lock files match CI), then:
 
 ```sh
 dotnet restore PaperStager.slnx --locked-mode

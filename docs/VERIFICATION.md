@@ -22,7 +22,7 @@ Between these two captures the QA run deliberately changes the template from the
 
 ### Linux capture of the live-name review — 2026-10-26
 
-Taken from the self-contained `linux-x64` package of this change, running the same `--qa` flow under Xvfb (Ubuntu 24.04, .NET SDK 10.0.403): 4 pages, 8 thumbnail renders, two exports of 2 PDFs each, originals unchanged. Locally, 104 Core tests, 11 desktop tests and 8 release-tool tests passed; the NuGet audit reported 0 advisories; `release.py smoke` passed launch and restart of the packaged app. macOS and Windows results come from CI.
+Taken from the self-contained `linux-x64` package of this change, running the same `--qa` flow under Xvfb (Ubuntu 24.04, .NET SDK 10.0.401): 4 pages, 8 thumbnail renders, two exports of 2 PDFs each, originals unchanged. Locally, 104 Core tests, 11 desktop tests and 8 release-tool tests passed; the NuGet audit reported 0 advisories; `release.py smoke` passed launch and restart of the packaged app. macOS and Windows results come from CI.
 
 ![Boundaries and naming rules on Linux](screenshots/boundaries-linux.png)
 ![Approved review on Linux, with the accent export button](screenshots/review-linux.png)

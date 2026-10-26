@@ -11,6 +11,9 @@ working in this repository.
 - Run the core tests, the headless desktop tests and the package launch smoke
   before a release.
 
+`global.json` pins .NET SDK 10.0.401: the lock files record the SDK's trimming package version, so a
+different SDK fails the locked restore.
+
 ```sh
 dotnet restore PaperStager.slnx --locked-mode
 dotnet build PaperStager.slnx -c Release --no-restore
