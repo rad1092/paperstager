@@ -1,8 +1,10 @@
 # PaperStager
 
-**Review a scanned PDF batch, split it into documents, and give every file a verified name.**
+**Review a batch of PDFs that already have selectable text, split it into documents, and give every file a verified name.**
 
-PaperStager is an open-source C# desktop app for macOS, Windows and Linux. It starts with PDFs you already have. Actual page thumbnails help you mark document boundaries; multiple independent text rules suggest naming fields; a review desk catches missing fields, invalid names and duplicate paths before you approve an export.
+PaperStager is a free, open-source desktop app for macOS, Windows and Linux. Paid Windows tools such as ScanRoute Local (Microsoft Store) and AutoSplit (needs Adobe Acrobat) already split and name batches. PaperStager does the review-before-filing part for free, on all three systems, with every step visible. Page thumbnails help you mark document boundaries, text rules suggest naming fields, and a review desk catches missing fields, invalid names and duplicate paths before you approve an export.
+
+**PaperStager has no OCR.** Naming rules read the text layer that is already in the PDF. Most office scanners produce image-only PDFs: run them through a tool that adds a text layer first (for example [NAPS2](https://www.naps2.com/), or your scanner's "searchable PDF" setting), or type the naming fields by hand on the review screen.
 
 ![The native review desk, captured by the app client renderer](docs/screenshots/boundaries-macos.png)
 
@@ -19,7 +21,7 @@ previews become two exported documents and a manifest before using your own PDFs
 
 1. **Import PDFs** by dropping them into the window or choosing files.
 2. **Boundaries & names:** check the first page of every document. Select text and add label/regex naming rules, or add rules directly. Use a template such as `{date}_{client}_{reference}`.
-3. **Review & export:** correct extracted fields, skip documents with a reason, and refresh the proposed names. Check the approval box, then choose an output folder.
+3. **Review & export:** correct extracted fields or skip documents with a reason; the proposed names update as you type. Check the approval box, then choose an output folder.
 4. **Results:** the new batch folder contains ordinary PDF files and `manifest.json`, mapping original source hashes and page ranges to output hashes and names.
 
 [한국어 빠른 시작](docs/QUICKSTART.ko.md) · [Privacy and offline policy](docs/PRIVACY.md) · [Limitations](docs/LIMITATIONS.md) · [Research and alternatives](docs/RESEARCH.md)
@@ -27,14 +29,14 @@ previews become two exported documents and a manifest before using your own PDFs
 ## What makes it useful
 
 - Standalone, open-source workflow across three desktop operating systems.
-- Searchable PDFs first: source text is reused instead of making another OCR guess.
+- Text-layer PDFs first: the text already in the PDF is reused instead of making another OCR guess.
 - Multiple independent label or regex fields, reusable templates, editable values and Unicode names.
 - Review and explicit approval; no background folder watchers or unattended export.
 - Originals are only read. Existing output is never overwritten. A fresh batch folder is promoted only after staging completes.
 - Failed or cancelled export leaves a clearly named recovery folder and progress journal where possible. Retry from the saved project after inspecting the journal.
 - Save/open projects and templates as readable JSON. Approval is never saved.
 
-This is not a new invention of split/name/review/commit: ScanRoute Local already serves that workflow on Windows. PaperStager focuses on open source, standalone cross-platform use and searchable-document field rules. It is not a scanner, OCR engine, document-management system or PDF annotation migration utility. To use image-only scans, first create a searchable PDF in [NAPS2](https://www.naps2.com/) or enter fields manually. No OCR or LLM executes inside this release.
+PaperStager is not a scanner, OCR engine, document-management system or PDF annotation migration utility. No OCR or LLM runs inside this release. PDFs with annotations, form fields, layers or actions are rejected before page copying; flatten them first (see [Limitations](docs/LIMITATIONS.md#pdf-structure-safety-boundary)).
 
 ## Build and verify
 
@@ -53,6 +55,6 @@ The CI workflow builds and tests on macOS, Windows and Linux, creates self-conta
 
 ## Contributing
 
-Keep changes focused. Use synthetic fixtures, retain originals, and test failure and cancellation paths. Read [AGENTS.md](AGENTS.md) and [the product specification](docs/SPEC.md). Report issues without attaching private PDFs; a reduced synthetic reproduction is ideal.
+Keep changes focused. Use synthetic fixtures, retain originals, and test failure and cancellation paths. Read [CONTRIBUTING.md](CONTRIBUTING.md) and [the product specification](docs/SPEC.md). Report issues without attaching private PDFs; a reduced synthetic reproduction is ideal.
 
 MIT licensed. Dependency licenses remain their respective licenses.

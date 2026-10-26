@@ -10,10 +10,12 @@ no scanner, OCR service, account or remote upload to configure.
    including the rotated-page example. Names come from the configured text
    rules and your edits; they are not inferred from a business system.
 3. Visit **Review & export**. Inspect both proposed filenames. Correct any
-   missing field, invalid name or duplicate. After any correction, click
-   **Refresh plan after edits** and review the updated names and errors again.
-   Editing clears the reviewed plan and its approval; checking the approval
-   box alone cannot enable export until this refresh succeeds.
+   missing field, invalid name or duplicate. Proposed names and errors update
+   as you type. Editing clears any earlier approval: check the updated names,
+   then check the approval box again. Approving turns exactly what is on
+   screen into the export plan; export stays disabled while anything is
+   marked **Needs review**. **Recheck the whole plan** redraws the screen
+   from scratch if you want a clean view.
 4. Check the approval box and choose a new, empty practice output folder. Open
    the created batch folder: expect two PDFs and `manifest.json`.
 5. Open both PDFs in your usual reader. Compare their pages with the previews.

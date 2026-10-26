@@ -172,6 +172,33 @@ public sealed class WorkflowTests
     }
 
     [AvaloniaFact]
+    public async Task ReviewEditUpdatesProposedNameAndApprovalUsesCurrentValues()
+    {
+        var window = new MainWindow();
+        window.Show();
+        try
+        {
+            await window.LoadDemoAsync();
+            await WaitForAsync(() => window.RenderedThumbnailCount >= 4);
+            Click(Find<Button>(window, "ReviewButton"));
+            await PumpAsync();
+            var value = window.GetVisualDescendants().OfType<TextBox>().First(t => t.PlaceholderText == "Enter verified value");
+            value.Text = "Live";
+            await PumpAsync();
+            Assert.Null(window.ReviewPlan);
+            Assert.Contains(window.GetVisualDescendants().OfType<TextBlock>(), t => t.FontSize == 20 && (t.Text ?? "").Contains("Live", StringComparison.Ordinal));
+
+            Find<CheckBox>(window, "ApprovalCheckBox").IsChecked = true;
+            Assert.NotNull(window.ReviewPlan);
+            Assert.False(window.ReviewPlan.HasErrors);
+            Assert.Contains("Live", window.ReviewPlan.Documents[0].FileName);
+            Assert.True(window.IsApproved);
+            Assert.True(Find<Button>(window, "ExportButton").IsEnabled);
+        }
+        finally { await CloseAndDeleteDemoAsync(window); }
+    }
+
+    [AvaloniaFact]
     public async Task RepeatedBackNavigationPreservesRulesAndBoundaryCoverage()
     {
         var window = new MainWindow();
