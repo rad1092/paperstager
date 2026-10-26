@@ -84,6 +84,9 @@ public sealed class MainWindow : Window
     private static TextBlock Text(string value, int size = 14) => new() { Text = value, FontSize = size, TextWrapping = TextWrapping.Wrap };
     private static Button ActionButton(string text, Action action, string? name = null)
     { var b = new Button { Content = text, Name = name, Padding = new Thickness(12, 9) }; b.Click += (_, _) => action(); return b; }
+    // One accent button per step marks the main way forward.
+    private static Button Primary(Button button) { button.Classes.Add("accent"); return button; }
+    private static TextBlock ErrorText(string error) => new() { Text = "Needs review: " + error, Foreground = Brush("#A12B31"), TextWrapping = TextWrapping.Wrap };
     private static Border Card(Control child) => new() { Child = child, Background = Brushes.White, CornerRadius = new CornerRadius(9), Padding = new Thickness(18), BorderBrush = Brush("#DDE3EC"), BorderThickness = new Thickness(1) };
     private void Heading(string title, string detail) { _body.Children.Add(Text(title, 28)); _body.Children.Add(Text(detail)); }
     private void Changed() { _dirty = true; ReviewPlan = null; if (_approval != null) _approval.IsChecked = false; }
@@ -105,9 +108,9 @@ public sealed class MainWindow : Window
         Heading("Turn a batch into files you can trust", "Open combined PDFs, decide where each document starts, then review every proposed name before saving.");
         var entry = new StackPanel { Spacing = 14 };
         entry.Children.Add(Text("Drop PDF files anywhere in this window", 20));
-        entry.Children.Add(Text("Searchable PDFs work immediately. For image-only scans, add a text layer with NAPS2 first, or enter naming fields manually."));
+        entry.Children.Add(Text("PDFs with selectable text work immediately. PaperStager has no OCR: for image-only scans, add a text layer first (for example with NAPS2), or type the naming fields yourself."));
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
-        actions.Children.Add(ActionButton("Choose PDFs…", () => _ = RunUiAsync(PickPdfsAsync), "ImportButton"));
+        actions.Children.Add(Primary(ActionButton("Choose PDFs…", () => _ = RunUiAsync(PickPdfsAsync), "ImportButton")));
         actions.Children.Add(ActionButton("Try a synthetic example", () => _ = RunUiAsync(LoadDemoAsync), "DemoButton")); entry.Children.Add(actions); _body.Children.Add(Card(entry));
         foreach (var source in Project.Sources)
         {
@@ -117,7 +120,7 @@ public sealed class MainWindow : Window
             line.Children.Add(ActionButton("Remove from this project", () => { Project.Sources.Remove(source); Project.Documents.RemoveAll(d => d.SourceId == source.Id); Changed(); NavigateTo(0); })); _body.Children.Add(Card(line));
         }
         foreach (var issue in _importIssues) _body.Children.Add(Text(issue));
-        if (Project.Sources.Count > 0) _body.Children.Add(ActionButton("Continue to boundaries & names →", () => NavigateTo(1), "ContinueButton"));
+        if (Project.Sources.Count > 0) _body.Children.Add(Primary(ActionButton("Continue to boundaries & names →", () => NavigateTo(1), "ContinueButton")));
     }
 
     private async Task PickPdfsAsync()
@@ -220,7 +223,7 @@ public sealed class MainWindow : Window
         templateActions.Children.Add(ActionButton("Save template…", () => _ = RunUiAsync(SaveTemplateAsync)));
         templateActions.Children.Add(ActionButton("Load template…", () => _ = RunUiAsync(LoadTemplateAsync))); right.Children.Add(templateActions);
         Grid.SetColumn(right, 1); layout.Children.Add(right); _body.Children.Add(layout);
-        _body.Children.Add(ActionButton("Review proposed files →", () => NavigateTo(2), "ReviewButton"));
+        _body.Children.Add(Primary(ActionButton("Review proposed files →", () => NavigateTo(2), "ReviewButton")));
     }
     private void ClearBody() { _previewGeneration++; foreach (var bitmap in _bitmaps) bitmap.Dispose(); _bitmaps.Clear(); _body.Children.Clear(); }
     private void ShowBoundaryRefresh() { ClearBody(); ShowBoundaries(); }
@@ -260,42 +263,67 @@ public sealed class MainWindow : Window
 
     private void ShowReview()
     {
-        Heading("Review every file before export", "Correct field values or skip a document with a reason. Nothing is saved until you approve this plan and choose an export folder.");
+        Heading("Review every file before export", "Correct field values or skip a document with a reason. Proposed names update as you type. Nothing is saved until you approve this plan and choose an export folder.");
         ReviewPlan = new PlanningService().CreatePlan(Project);
-        foreach (var error in ReviewPlan.Errors) _body.Children.Add(Text("Needs review: " + error));
-        var summary = Text($"{ReviewPlan.Documents.Count(d => !d.Skip)} files planned · {ReviewPlan.Documents.Count(d => d.Skip)} skipped · {ReviewPlan.Documents.Count(d => d.Errors.Count > 0)} need attention", 19); _body.Children.Add(summary);
+        var planErrors = new StackPanel { Spacing = 4 }; _body.Children.Add(planErrors);
+        var summary = Text("", 19); _body.Children.Add(summary);
+        var names = new Dictionary<string, TextBlock>(StringComparer.Ordinal);
+        var problems = new Dictionary<string, StackPanel>(StringComparer.Ordinal);
+        // Show a plan's names and errors. Edits call PreviewNames, which only
+        // previews: ReviewPlan stays cleared until the plan is approved again.
+        void ShowPlan(ExportPlan plan)
+        {
+            planErrors.Children.Clear();
+            foreach (var error in plan.Errors) planErrors.Children.Add(ErrorText(error));
+            summary.Text = $"{plan.Documents.Count(d => !d.Skip)} files planned · {plan.Documents.Count(d => d.Skip)} skipped · {plan.Documents.Count(d => d.Errors.Count > 0)} need attention";
+            foreach (var item in plan.Documents)
+            {
+                if (names.TryGetValue(item.Id, out var name)) name.Text = item.Skip ? "Skipped" : item.FileName;
+                if (problems.TryGetValue(item.Id, out var list)) { list.Children.Clear(); foreach (var error in item.Errors) list.Children.Add(ErrorText(error)); }
+            }
+        }
+        void PreviewNames()
+        {
+            try { ShowPlan(new PlanningService().CreatePlan(Project)); }
+            catch (Exception ex) { SetStatus("Could not preview the names: " + ex.Message); }
+        }
         foreach (var planned in ReviewPlan.Documents)
         {
             var draft = Project.Documents.Single(d => d.Id == planned.Id); var source = Project.Sources.Single(s => s.Id == draft.SourceId);
             var panel = new StackPanel { Spacing = 10 }; panel.Children.Add(Text($"{Path.GetFileName(source.Path)}  /  pages {draft.StartPage}–{draft.EndPage}", 13));
-            panel.Children.Add(Text(planned.Skip ? "Skipped" : planned.FileName, 20));
+            var proposed = Text("", 20); names[planned.Id] = proposed; panel.Children.Add(proposed);
             var fields = new WrapPanel { Orientation = Orientation.Horizontal };
             foreach (var rule in Project.Template.Fields)
             {
                 var field = new StackPanel { Width = 200, Margin = new Thickness(0, 0, 12, 6) }; field.Children.Add(Text(rule.Name, 12));
                 var value = new TextBox { Text = planned.Fields.GetValueOrDefault(rule.Name, ""), PlaceholderText = "Enter verified value" };
                 var previousValue = value.Text;
-                value.TextChanged += (_, _) => { if (value.Text == previousValue) return; previousValue = value.Text; draft.ManualFields[rule.Name] = value.Text ?? ""; InvalidateApproval(); }; field.Children.Add(value); fields.Children.Add(field);
+                value.TextChanged += (_, _) => { if (value.Text == previousValue) return; previousValue = value.Text; draft.ManualFields[rule.Name] = value.Text ?? ""; InvalidateApproval(); PreviewNames(); }; field.Children.Add(value); fields.Children.Add(field);
             }
             panel.Children.Add(fields);
             var skip = new CheckBox { Content = "Skip this document", IsChecked = draft.Skip }; var reason = new TextBox { Text = draft.SkipReason, PlaceholderText = "Reason for skipping (recorded in manifest)" };
-            skip.IsCheckedChanged += (_, _) => { if (draft.Skip == (skip.IsChecked == true)) return; draft.Skip = skip.IsChecked == true; InvalidateApproval(); };
-            reason.TextChanged += (_, _) => { if (draft.SkipReason == (reason.Text ?? "")) return; draft.SkipReason = reason.Text ?? ""; InvalidateApproval(); }; panel.Children.Add(skip); panel.Children.Add(reason);
-            foreach (var error in planned.Errors) panel.Children.Add(new TextBlock { Text = "Needs review: " + error, Foreground = Brush("#A12B31"), TextWrapping = TextWrapping.Wrap });
+            skip.IsCheckedChanged += (_, _) => { if (draft.Skip == (skip.IsChecked == true)) return; draft.Skip = skip.IsChecked == true; InvalidateApproval(); PreviewNames(); };
+            reason.TextChanged += (_, _) => { if (draft.SkipReason == (reason.Text ?? "")) return; draft.SkipReason = reason.Text ?? ""; InvalidateApproval(); PreviewNames(); }; panel.Children.Add(skip); panel.Children.Add(reason);
+            var issues = new StackPanel { Spacing = 4 }; problems[planned.Id] = issues; panel.Children.Add(issues);
             _body.Children.Add(Card(panel));
         }
-        _body.Children.Add(ActionButton("Refresh plan after edits", () => NavigateTo(2), "RefreshPlanButton"));
+        ShowPlan(ReviewPlan);
+        _body.Children.Add(ActionButton("Recheck the whole plan", () => NavigateTo(2), "RefreshPlanButton"));
         _approval = new CheckBox { Content = "I checked the boundaries, field values and all proposed paths.", Name = "ApprovalCheckBox" };
-        _export = ActionButton("Choose folder & export approved files…", () => _ = RunUiAsync(PickExportAsync), "ExportButton"); _export.IsEnabled = false;
+        _export = Primary(ActionButton("Choose folder & export approved files…", () => _ = RunUiAsync(PickExportAsync), "ExportButton")); _export.IsEnabled = false;
         _approval.IsCheckedChanged += (_, _) => {
+            // After an edit the names on screen are a live preview; approving
+            // turns exactly the current project into the plan that is exported.
+            if (_approval.IsChecked == true && ReviewPlan == null) ReviewPlan = new PlanningService().CreatePlan(Project);
             _export.IsEnabled = _approval.IsChecked == true && ReviewPlan?.HasErrors == false;
             if (_export.IsEnabled) SetStatus("Plan approved. Choose an output folder to export this reviewed batch.");
+            else if (_approval.IsChecked == true) SetStatus("Fix the items marked Needs review before exporting.");
         };
         _body.Children.Add(_approval); _body.Children.Add(_export);
         SetStatus(ReviewPlan.HasErrors ? "Fix the review errors before approving export." : "Review the proposed names and approve when ready.");
         _body.Children.Add(Text("A new PaperStager batch folder will contain all PDFs and a mapping manifest. Existing files are never overwritten.", 12));
     }
-    private void InvalidateApproval() { Changed(); if (_export != null) _export.IsEnabled = false; SetStatus("Plan changed. Refresh it and approve the updated paths."); }
+    private void InvalidateApproval() { Changed(); if (_export != null) _export.IsEnabled = false; SetStatus("Names updated. Check them, then approve the plan again."); }
     public void SetApproval(bool approved) { if (_approval != null) _approval.IsChecked = approved; }
     private ExportResult? _result;
     private async Task PickExportAsync()
