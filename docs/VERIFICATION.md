@@ -18,7 +18,14 @@ The images below were rendered by Avalonia `RenderTargetBitmap` from the **displ
 ![Boundaries and independent naming rules](screenshots/boundaries-macos.png)
 ![Proposed filenames and editable fields](screenshots/review-macos.png)
 
-Between these two captures the QA run deliberately changes the template from the demo's `{date}_{client}_{reference}` to `reviewed_{client}_{reference}_checked`, to prove that template edits are tracked and survive save and reopen. That is why the review capture shows `reviewed_…_checked.pdf` names. With the unchanged demo template the names start with the date. These captures predate the change that updates names as you type and gives each step one accent-coloured main button; they will be retaken with the next release run.
+Between these two captures the QA run deliberately changes the template from the demo's `{date}_{client}_{reference}` to `reviewed_{client}_{reference}_checked`, to prove that template edits are tracked and survive save and reopen. That is why the review capture shows `reviewed_…_checked.pdf` names. With the unchanged demo template the names start with the date. These macOS captures predate the change that updates names as you type and gives each step one accent-coloured main button.
+
+### Linux capture of the live-name review — 2026-10-26
+
+Taken from the self-contained `linux-x64` package of this change, running the same `--qa` flow under Xvfb (Ubuntu 24.04, .NET SDK 10.0.403): 4 pages, 8 thumbnail renders, two exports of 2 PDFs each, originals unchanged. Locally, 104 Core tests, 11 desktop tests and 8 release-tool tests passed; the NuGet audit reported 0 advisories; `release.py smoke` passed launch and restart of the packaged app. macOS and Windows results come from CI.
+
+![Boundaries and naming rules on Linux](screenshots/boundaries-linux.png)
+![Approved review on Linux, with the accent export button](screenshots/review-linux.png)
 ![Unsaved edit confirmation](screenshots/unsaved-confirmation-macos.png)
 
 External CUA app access failed to return twice and was aborted. It is not retried. **External window controls, native file/folder-picker mouse interaction and OS drag-and-drop remain manually unverified.** Automated project reopening is distinct from package process restart. No OS permission or security setting was changed.
